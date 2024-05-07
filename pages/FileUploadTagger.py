@@ -228,6 +228,8 @@ if __name__ == '__main__':
     # for error message or list of uploaded files
     deconv_files = sorted(st.session_state["deconv_dfs"].keys())
     anno_files = sorted(st.session_state["anno_dfs"].keys())
+    tag_files = sorted(st.session_state["tag_dfs"].keys())
+    db_files = sorted(st.session_state["protein_dfs"].keys())
 
     # error message if files not exist
     if len(deconv_files) == 0 and len(anno_files) == 0:
@@ -240,7 +242,7 @@ if __name__ == '__main__':
         st.error("The same number of deconvolved and annotated mzML file should be uploaded!")
     else:
         v_space(2)
-        st.session_state["experiment-df"] = getUploadedFileDF(deconv_files, anno_files)
+        st.session_state["experiment-df"] = getUploadedFileDF(deconv_files, anno_files, tag_files, db_files)
         st.markdown('**Uploaded experiments in current workspace**')
         st.dataframe(st.session_state["experiment-df"])  # show table
         v_space(1)

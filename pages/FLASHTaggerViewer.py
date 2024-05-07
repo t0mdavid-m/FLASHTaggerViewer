@@ -222,9 +222,9 @@ def sendDataToJS(selected_data, layout_info_per_exp):
             elif comp_name == 'sequence_view':
             #    data_to_send['sequence_data'] = getFragmentDataFromSeq(st.session_state.input_sequence)
                 component_arguments = SequenceViewTagger()
-            elif comp_name == 'internal_fragment_view':
+            elif comp_name == 'internal_fragment_map':
             #    data_to_send['internal_fragment_data'] = getInternalFragmentDataFromSeq(st.session_state.input_sequence)
-                component_arguments = InternalFragmentView()
+                component_arguments = InternalFragmentMap()
 
             components_of_this_row.append(FlashViewerComponent(component_arguments))
         components.append(components_of_this_row)
@@ -266,7 +266,7 @@ def sendDataToJS(selected_data, layout_info_per_exp):
 def setSequenceViewInDefaultView():
     if 'input_sequence' in st.session_state and st.session_state.input_sequence:
         global DEFAULT_LAYOUT
-        DEFAULT_LAYOUT = DEFAULT_LAYOUT + [['sequence_view']] + [['internal_fragment_view']]
+        DEFAULT_LAYOUT = DEFAULT_LAYOUT + [['sequence_view']] + [['internal_fragment_map']]
 
 
 def content():
