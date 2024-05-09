@@ -108,6 +108,13 @@ def parseUploadedFiles(reparse=False):
     new_protein_files = [f for f in protein_files if f not in st.session_state['protein_dfs'] or reparse]
     # new_db_files = [f for f in db_files if f not in st.session_state['protein_db']]
 
+    # TODO: Find better solution when enabling file upload
+    all_files = {t.split('_')[0] for t in new_tag_files}
+    new_deconv_files = [f for f in new_deconv_files if f.split('_')[0] in all_files]
+    new_anno_files = [f for f in new_anno_files if f.split('_')[0] in all_files]
+    new_tag_files = [f for f in new_tag_files if f.split('_')[0] in all_files]
+    new_protein_files = [f for f in new_protein_files if f.split('_')[0] in all_files]
+
     # if newly uploaded files are not as needed
     if len(new_deconv_files)==0 and len(new_anno_files)==0 and len(new_tag_files)==0 and len(new_protein_files)==0: # if no newly uploaded files, move on
         return
