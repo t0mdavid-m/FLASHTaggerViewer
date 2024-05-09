@@ -135,119 +135,121 @@ def parseUploadedFiles():
             st.success('Done parsing the experiment %s!' % exp_name)
 
 
-# page initialization
-params = page_setup()
+if __name__ == '__main__':
 
-# make directory to store deconv and anno mzML files & initialize data storage
-input_file_types = ["deconv-mzMLs", "anno-mzMLs"]
-parsed_df_types = ["deconv_dfs", "anno_dfs"]
-initializeWorkspace(input_file_types, parsed_df_types)
+    # page initialization
+    params = page_setup()
 
-st.title("File Upload")
+    # make directory to store deconv and anno mzML files & initialize data storage
+    input_file_types = ["deconv-mzMLs", "anno-mzMLs"]
+    parsed_df_types = ["deconv_dfs", "anno_dfs"]
+    initializeWorkspace(input_file_types, parsed_df_types)
 
-tabs = st.tabs(["File Upload", "Example Data"])
+    st.title("File Upload")
 
-# Load Example Data
-with tabs[1]:
-    st.markdown("An example truncated file from the E. coli dataset.")
-    _, c2, _ = st.columns(3)
-    if c2.button("Load Example Data", type="primary"):
-        # loading and copying example files into default workspace
-        for filename_postfix, input_file_session_name in zip(['*deconv.mzML', '*annotated.mzML'],
-                                                             input_file_types):
-            for file in Path("example-data").glob(filename_postfix):
-                if file.name not in st.session_state[input_file_session_name]:
-                    shutil.copy(file, Path(st.session_state["workspace"], input_file_session_name, file.name))
-                    st.session_state[input_file_session_name].append(file.name)
-        # parsing the example files is done in parseUploadedFiles later
-        st.success("Example mzML files loaded!")
+    tabs = st.tabs(["File Upload", "Example Data"])
 
-# Upload files via upload widget
-with tabs[0]:
-    st.subheader("**Upload FLASHDeconv output files (\*_annotated.mzML & \*_deconv.mzML)**")
-    # Display info how to upload files
-    st.info(
-        """
-    **💡 How to upload files**
-    
-    1. Browse files on your computer or drag and drops files
-    2. Click the **Add the uploaded mzML files** button to use them in the workflows
-    
-    Select data for analysis from the uploaded files shown below.
-    
-    **💡 Make sure that the same number of deconvolved and annotated mzML files are uploaded!**
-    """
-    )
-    with st.form('input_mzml', clear_on_submit=True):
-        uploaded_file = st.file_uploader(
-            "FLASHDeconv output mzML files", accept_multiple_files=True
-        )
+    # Load Example Data
+    with tabs[1]:
+        st.markdown("An example truncated file from the E. coli dataset.")
         _, c2, _ = st.columns(3)
-        # User needs to click button to upload selected files
-        if c2.form_submit_button("Add mzML files to workspace", type="primary"):
-            # Copy uploaded mzML files to deconv-mzML-files directory
-            if uploaded_file:
-                # A list of files is required, since online allows only single upload, create a list
-                if type(uploaded_file) != list:
-                    uploaded_file = [uploaded_file]
+        if c2.button("Load Example Data", type="primary"):
+            # loading and copying example files into default workspace
+            for filename_postfix, input_file_session_name in zip(['*deconv.mzML', '*annotated.mzML'],
+                                                                input_file_types):
+                for file in Path("example-data").glob(filename_postfix):
+                    if file.name not in st.session_state[input_file_session_name]:
+                        shutil.copy(file, Path(st.session_state["workspace"], input_file_session_name, file.name))
+                        st.session_state[input_file_session_name].append(file.name)
+            # parsing the example files is done in parseUploadedFiles later
+            st.success("Example mzML files loaded!")
 
-                # opening file dialog and closing without choosing a file results in None upload
-                handleInputFiles(uploaded_file)
-                st.success("Successfully added uploaded files!")
-            else:
-                st.warning("Upload some files before adding them.")
-
-# parse files if newly uploaded
-st.session_state['progress_bar_space'] = st.container()
-parseUploadedFiles()
-
-# for error message or list of uploaded files
-deconv_files = sorted(st.session_state["deconv_dfs"].keys())
-anno_files = sorted(st.session_state["anno_dfs"].keys())
-
-# error message if files not exist
-if len(deconv_files) == 0 and len(anno_files) == 0:
-    st.info('No mzML added yet!', icon="ℹ️")
-elif len(deconv_files) == 0:
-    st.error("FLASHDeconv deconvolved mzML file is not added yet!")
-elif len(anno_files) == 0:
-    st.error("FLASHDeconv annotated mzML file is not added yet!")
-elif len(deconv_files) != len(anno_files):
-    st.error("The same number of deconvolved and annotated mzML file should be uploaded!")
-else:
-    v_space(2)
-    st.session_state["experiment-df"] = getUploadedFileDF(deconv_files, anno_files)
-    st.markdown('**Uploaded experiments in current workspace**')
-    st.dataframe(st.session_state["experiment-df"])  # show table
-    v_space(1)
-
-    # Remove files
-    with st.expander("🗑️ Remove mzML files"):
-        to_remove = st.multiselect(
-            "select mzML files", options=st.session_state["experiment-df"]['Experiment Name']
+    # Upload files via upload widget
+    with tabs[0]:
+        st.subheader("**Upload FLASHDeconv output files (\*_annotated.mzML & \*_deconv.mzML)**")
+        # Display info how to upload files
+        st.info(
+            """
+        **💡 How to upload files**
+        
+        1. Browse files on your computer or drag and drops files
+        2. Click the **Add the uploaded mzML files** button to use them in the workflows
+        
+        Select data for analysis from the uploaded files shown below.
+        
+        **💡 Make sure that the same number of deconvolved and annotated mzML files are uploaded!**
+        """
         )
-        c1, c2 = st.columns(2)
-        if c2.button(
-                "Remove **selected**", type="primary", disabled=not any(to_remove)
-        ):
-            params = remove_selected_mzML_files(to_remove, params)
-            # save_params(params)
-            st.rerun()
+        with st.form('input_mzml', clear_on_submit=True):
+            uploaded_file = st.file_uploader(
+                "FLASHDeconv output mzML files", accept_multiple_files=True
+            )
+            _, c2, _ = st.columns(3)
+            # User needs to click button to upload selected files
+            if c2.form_submit_button("Add mzML files to workspace", type="primary"):
+                # Copy uploaded mzML files to deconv-mzML-files directory
+                if uploaded_file:
+                    # A list of files is required, since online allows only single upload, create a list
+                    if type(uploaded_file) != list:
+                        uploaded_file = [uploaded_file]
 
-        if c1.button("⚠️ Remove **all**", disabled=not any(st.session_state["experiment-df"])):
-            for file_option, df_option in zip(input_file_types, parsed_df_types):
-                if file_option in st.session_state:
-                    reset_directory(Path(st.session_state.workspace, file_option))
-                    st.session_state[file_option] = []
-                if df_option in st.session_state:
-                    st.session_state[df_option] = {}
+                    # opening file dialog and closing without choosing a file results in None upload
+                    handleInputFiles(uploaded_file)
+                    st.success("Successfully added uploaded files!")
+                else:
+                    st.warning("Upload some files before adding them.")
 
-                    # for k, v in params.items():
-                    #     if df_option in k and isinstance(v, list):
-                    #         params[k] = []
-            st.success("All mzML files removed!")
-            del st.session_state["experiment-df"]  # reset the experiment df table
-            # save_params(params)
-            st.rerun()
+    # parse files if newly uploaded
+    st.session_state['progress_bar_space'] = st.container()
+    parseUploadedFiles()
 
-save_params(params)
+    # for error message or list of uploaded files
+    deconv_files = sorted(st.session_state["deconv_dfs"].keys())
+    anno_files = sorted(st.session_state["anno_dfs"].keys())
+
+    # error message if files not exist
+    if len(deconv_files) == 0 and len(anno_files) == 0:
+        st.info('No mzML added yet!', icon="ℹ️")
+    elif len(deconv_files) == 0:
+        st.error("FLASHDeconv deconvolved mzML file is not added yet!")
+    elif len(anno_files) == 0:
+        st.error("FLASHDeconv annotated mzML file is not added yet!")
+    elif len(deconv_files) != len(anno_files):
+        st.error("The same number of deconvolved and annotated mzML file should be uploaded!")
+    else:
+        v_space(2)
+        st.session_state["experiment-df"] = getUploadedFileDF(deconv_files, anno_files)
+        st.markdown('**Uploaded experiments in current workspace**')
+        st.dataframe(st.session_state["experiment-df"])  # show table
+        v_space(1)
+
+        # Remove files
+        with st.expander("🗑️ Remove mzML files"):
+            to_remove = st.multiselect(
+                "select mzML files", options=st.session_state["experiment-df"]['Experiment Name']
+            )
+            c1, c2 = st.columns(2)
+            if c2.button(
+                    "Remove **selected**", type="primary", disabled=not any(to_remove)
+            ):
+                params = remove_selected_mzML_files(to_remove, params)
+                # save_params(params)
+                st.rerun()
+
+            if c1.button("⚠️ Remove **all**", disabled=not any(st.session_state["experiment-df"])):
+                for file_option, df_option in zip(input_file_types, parsed_df_types):
+                    if file_option in st.session_state:
+                        reset_directory(Path(st.session_state.workspace, file_option))
+                        st.session_state[file_option] = []
+                    if df_option in st.session_state:
+                        st.session_state[df_option] = {}
+
+                        # for k, v in params.items():
+                        #     if df_option in k and isinstance(v, list):
+                        #         params[k] = []
+                st.success("All mzML files removed!")
+                del st.session_state["experiment-df"]  # reset the experiment df table
+                # save_params(params)
+                st.rerun()
+
+    save_params(params)

@@ -154,7 +154,6 @@ def parsingWithProgressBar(infiles_deconv, infiles_anno, infiles_tag, infiles_pr
         for success in successes:
             success.empty()
 
-params = page_setup()
 def content():
     # make directory to store deconv and anno mzML files & initialize data storage
     input_types = ["deconv-mzMLs", "anno-mzMLs", "tags-tsv", "proteins-tsv"]
@@ -162,6 +161,9 @@ def content():
     initializeWorkspace(input_types, parsed_df_types)
 
 if __name__ == '__main__':
+
+    params = page_setup()
+
     # make directory to store deconv and anno mzML files & initialize data storage
     input_file_types = ["deconv-mzMLs", "anno-mzMLs", "tags-tsv", "proteins-tsv"]
     parsed_df_types = ["deconv_dfs", "anno_dfs", "tag_dfs", "protein_dfs"]
