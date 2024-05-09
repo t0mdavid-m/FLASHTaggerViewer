@@ -32,11 +32,11 @@ def flashdeconvPages():
     show_pages([
         Page("app.py", "FLASHViewer", "🏠"),
         Page("pages/FLASHDeconvWorkflow.py", "Workflow", "⚙️"),
-        Page("pages/FLASHDeconvDownload.py", "Download", "⬇️"),
         Page("pages/FileUpload.py", "File Upload", "📁"),
         Page("pages/SequenceInput.py", "Sequence Input", "🧵"),
         Page("pages/LayoutManager.py", "Layout Manager", "📝️"),
         Page("pages/FLASHDeconvViewer.py", "Viewer", "👀"),
+        Page("pages/FLASHDeconvDownload.py", "Download", "⬇️"),
     ])
 
 
