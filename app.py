@@ -20,7 +20,7 @@ Returns:
 
 import sys
 import streamlit as st
-
+from pathlib import Path
 from src.captcha_ import captcha_control
 from src.common import page_setup, save_params
 from st_pages import Page, show_pages
@@ -101,7 +101,23 @@ def main():
     st.selectbox("Choose a tool", ['FLASHDeconv', 'FLASHTagger', 'FLASHQuant'], index=st.session_state.tool_index,
                  on_change=onToolChange(), key='changed_tool_name')
     page_names_to_funcs[st.session_state.changed_tool_name]()
-    
+
+
+    if Path("OpenMS-App.zip").exists():
+        st.text("")
+        st.text("")
+        st.markdown("""
+        Download the latest version for Windows by clicking the button below.
+        """)
+        with open("OpenMS-App.zip", "rb") as file:
+            st.download_button(
+                label="Download for Windows",
+                data=file,
+                file_name="OpenMS-App.zip",
+                mime="archive/zip",
+                type="primary",
+            )
+            
     save_params(params)
 
 
