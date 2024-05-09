@@ -86,9 +86,9 @@ def getFragmentDataFromSeq(sequence, coverage=None, maxCoverage=None):
     out_object = {'sequence': list(sequence),
                   'theoretical_mass': protein_mass, 
                   'fixed_modifications': fixed_mods}
-    if coverage:
+    if coverage is not None:
         out_object['coverage'] = list(coverage)
-    if maxCoverage:
+    if maxCoverage is not None:
         out_object['maxCoverage'] = maxCoverage
 
     # per ion type, calculate the possible fragment masses and save them in dictionary
