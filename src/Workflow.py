@@ -357,10 +357,16 @@ class DeconvWorkflow(WorkflowManager):
             file_name = splitext(basename(in_mzML))[0]
             current_time = time.strftime("%Y%m%d-%H%M%S")
             folder_path = join(base_path, 'FLASHDeconvOutput', '%s_%s'%(file_name, current_time))
+            folder_path_anno = join(base_path, 'anno-mzMLs')
+            folder_path_deconv = join(base_path, 'deconv-mzMLs')
 
             if exists(folder_path):
                 rmtree(folder_path)
             makedirs(folder_path)
+            if not exists(folder_path_anno):
+                makedirs(folder_path_anno)
+            if not exists(folder_path_deconv):
+                makedirs(folder_path_deconv)
             
             out_tsv = join(folder_path, f'out.tsv')
             out_spec1 = join(folder_path, f'spec1.tsv')
@@ -368,8 +374,10 @@ class DeconvWorkflow(WorkflowManager):
             out_spec3 = join(folder_path, f'spec3.tsv')
             out_spec4 = join(folder_path, f'spec4.tsv')
             out_mzml = join(folder_path, f'out.mzML')
+            out_deconv_mzml_viewer = join(folder_path_deconv, f'{file_name}_{current_time}_deconv.mzML')
             out_quant = join(folder_path, f'quant.tsv')
             out_annotated_mzml = join(folder_path, f'annotated.mzML')
+            out_annotated_mzml_viewer = join(folder_path_anno, f'{file_name}_{current_time}_annotated.mzML')
             out_msalign1 = join(folder_path, f'msalign1.msalign')
             out_msalign2 = join(folder_path, f'msalign2.msalign')
             out_feature1 = join(folder_path, f'feature1.feature')
@@ -398,3 +406,6 @@ class DeconvWorkflow(WorkflowManager):
                     'out_feature2' : [out_feature2],
                 }
             )
+
+            copyfile(out_mzml, out_deconv_mzml_viewer)
+            copyfile(out_annotated_mzml, out_annotated_mzml_viewer)
