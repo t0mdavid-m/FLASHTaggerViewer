@@ -111,6 +111,13 @@ class TagWorkflow(WorkflowManager):
         self.ui.select_input_file("mzML-files", multiple=True)
         self.ui.select_input_file("fasta-file", multiple=False)
 
+        self.ui.input_widget(
+            'generate_decoys', name='Use target-decoy approach?', widget_type='checkbox'
+        )
+        self.ui.input_widget(
+            'few_proteins', name='Do you expect <100 Proteins?', widget_type='checkbox'
+        )
+
         # Create tabs for different analysis steps.
         t = st.tabs(
             ["**FLASHDeconv**", "**FLASHTagger**"]
