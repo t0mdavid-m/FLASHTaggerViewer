@@ -1,9 +1,8 @@
 import streamlit as st
 import time
 from .workflow.WorkflowManager import WorkflowManager
-from pages.FileUploadTagger import handleInputFiles
-from pages.FileUploadTagger import parseUploadedFiles
-from pages.FileUploadTagger import initializeWorkspace, showUploadedFilesTable
+from pages.FileUploadTagger import postprocessingAfterUpload_Tagger
+from pages.FileUpload import postprocessingAfterUpload_FD
 
 from os.path import join, splitext, basename, exists, dirname
 from os import makedirs
@@ -182,13 +181,7 @@ class TagWorkflow(WorkflowManager):
 
 
         # make directory to store deconv and anno mzML files & initialize data storage
-        input_types = ["deconv-mzMLs", "anno-mzMLs", "tags-tsv", "proteins-tsv"]
-        parsed_df_types = ["deconv_dfs", "anno_dfs", "tag_dfs", "protein_dfs"]
-        initializeWorkspace(input_types, parsed_df_types)
-        handleInputFiles(uploaded_files)
-        parseUploadedFiles(reparse=True)
-        showUploadedFilesTable()
-
+        postprocessingAfterUpload_Tagger(uploaded_files)
 
 
     
@@ -343,7 +336,35 @@ class DeconvWorkflow(WorkflowManager):
             ],
             display_subsections=True
         )
-    
+
+
+    def pp(self) -> None:
+        st.session_state['progress_bar_space'] = st.container()
+
+        try:
+            in_mzMLs = self.file_manager.get_files(self.params["mzML-files"])
+        except:
+            st.error('Please select at least one mzML file.')
+            return
+
+        base_path = dirname(self.workflow_dir)
+
+        uploaded_files = []
+        for in_mzML in in_mzMLs:
+            current_base = splitext(basename(in_mzML))[0]
+            current_time = time.strftime("%Y%m%d-%H%M%S")
+
+            out_anno = join(base_path, 'anno-mzMLs', f'{current_base}_{current_time}_annotated.mzML')
+            out_deconv = join(base_path, 'deconv-mzMLs', f'{current_base}_{current_time}_deconv.mzML')
+
+            #uploaded_files.append(out_db)
+            uploaded_files.append(out_anno)
+            uploaded_files.append(out_deconv)
+
+        # make directory to store deconv and anno mzML files & initialize data storage
+        postprocessingAfterUpload_FD(uploaded_files)
+
+
     def execution(self) -> None:
         # Get mzML input files from self.params.
         # Can be done without file manager, however, it ensures everything is correct.

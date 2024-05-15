@@ -8,6 +8,10 @@ from src.masstable import parseFLASHDeconvOutput
 from src.common import page_setup, v_space, save_params, reset_directory
 
 
+input_file_types = ["deconv-mzMLs", "anno-mzMLs"]
+parsed_df_types = ["deconv_dfs", "anno_dfs"]
+
+
 def initializeWorkspace(input_file_types_: list, parsed_df_types_: list) -> None:
     """
     Set up the required directory and session states
@@ -135,14 +139,45 @@ def parseUploadedFiles():
             st.success('Done parsing the experiment %s!' % exp_name)
 
 
+def showUploadedFilesTable() -> bool:
+    ''' return: if showing without error '''
+    # for error message or list of uploaded files
+    deconv_files = sorted(st.session_state["deconv_dfs"].keys())
+    anno_files = sorted(st.session_state["anno_dfs"].keys())
+
+    # error message if files not exist
+    if len(deconv_files) == 0 and len(anno_files) == 0:
+        st.info('No mzML added yet!', icon="ℹ️")
+    elif len(deconv_files) == 0:
+        st.error("FLASHDeconv deconvolved mzML file is not added yet!")
+    elif len(anno_files) == 0:
+        st.error("FLASHDeconv annotated mzML file is not added yet!")
+    elif len(deconv_files) != len(anno_files):
+        st.error("The same number of deconvolved and annotated mzML file should be uploaded!")
+    else:
+        v_space(2)
+        st.session_state["experiment-df"] = getUploadedFileDF(deconv_files, anno_files)
+        st.markdown('**Uploaded experiments in current workspace**')
+        st.dataframe(st.session_state["experiment-df"])  # show table
+        v_space(1)
+        return True
+    return False
+
+
+# for Workflow
+def postprocessingAfterUpload_FD(uploaded_files: list) -> None:
+    initializeWorkspace(input_file_types, parsed_df_types)
+    handleInputFiles(uploaded_files)
+    parseUploadedFiles(reparse=True)
+    showUploadedFilesTable()
+
+
 if __name__ == '__main__':
 
     # page initialization
     params = page_setup()
 
     # make directory to store deconv and anno mzML files & initialize data storage
-    input_file_types = ["deconv-mzMLs", "anno-mzMLs"]
-    parsed_df_types = ["deconv_dfs", "anno_dfs"]
     initializeWorkspace(input_file_types, parsed_df_types)
 
     st.title("FLASHDeconv output files Upload")
@@ -203,26 +238,7 @@ if __name__ == '__main__':
     st.session_state['progress_bar_space'] = st.container()
     parseUploadedFiles()
 
-    # for error message or list of uploaded files
-    deconv_files = sorted(st.session_state["deconv_dfs"].keys())
-    anno_files = sorted(st.session_state["anno_dfs"].keys())
-
-    # error message if files not exist
-    if len(deconv_files) == 0 and len(anno_files) == 0:
-        st.info('No mzML added yet!', icon="ℹ️")
-    elif len(deconv_files) == 0:
-        st.error("FLASHDeconv deconvolved mzML file is not added yet!")
-    elif len(anno_files) == 0:
-        st.error("FLASHDeconv annotated mzML file is not added yet!")
-    elif len(deconv_files) != len(anno_files):
-        st.error("The same number of deconvolved and annotated mzML file should be uploaded!")
-    else:
-        v_space(2)
-        st.session_state["experiment-df"] = getUploadedFileDF(deconv_files, anno_files)
-        st.markdown('**Uploaded experiments in current workspace**')
-        st.dataframe(st.session_state["experiment-df"])  # show table
-        v_space(1)
-
+    if showUploadedFilesTable():
         # Remove files
         with st.expander("🗑️ Remove mzML files"):
             to_remove = st.multiselect(
