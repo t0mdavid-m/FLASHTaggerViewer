@@ -145,19 +145,19 @@ if __name__ == '__main__':
     parsed_df_types = ["deconv_dfs", "anno_dfs"]
     initializeWorkspace(input_file_types, parsed_df_types)
 
-    st.title("File Upload")
+    st.title("FLASHDeconv output files Upload")
 
     tabs = st.tabs(["File Upload", "Example Data"])
 
     # Load Example Data
     with tabs[1]:
-        st.markdown("An example truncated file from the E. coli dataset.")
+        st.markdown("An example truncated file from the ThermoFisher Pierce Intact Protein Standard Mix dataset.")
         _, c2, _ = st.columns(3)
         if c2.button("Load Example Data", type="primary"):
             # loading and copying example files into default workspace
             for filename_postfix, input_file_session_name in zip(['*deconv.mzML', '*annotated.mzML'],
                                                                 input_file_types):
-                for file in Path("example-data").glob(filename_postfix):
+                for file in Path("example-data/flashdeconv").glob(filename_postfix):
                     if file.name not in st.session_state[input_file_session_name]:
                         shutil.copy(file, Path(st.session_state["workspace"], input_file_session_name, file.name))
                         st.session_state[input_file_session_name].append(file.name)
