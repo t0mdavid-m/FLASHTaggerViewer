@@ -186,9 +186,9 @@ jobs:
         name: OpenMS-share
         path: OpenMS/share
 
-    build-executable:
-      runs-on: windows-latest
-      needs: [build-openms, build-vue-js-component]
+  build-executable:
+    runs-on: windows-latest
+    needs: [build-openms, build-vue-js-component]
 
     env:
       PYTHON_VERSION: 3.11.0
