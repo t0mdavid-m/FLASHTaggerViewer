@@ -168,7 +168,7 @@ def showUploadedFilesTable() -> bool:
 # for Workflow
 def postprocessingAfterUpload_FD(uploaded_files: list) -> None:
     initializeWorkspace(input_file_types, parsed_df_types)
-    handleInputFiles(uploaded_files)
+    #handleInputFiles(uploaded_files)
     parseUploadedFiles()
     showUploadedFilesTable()
 
