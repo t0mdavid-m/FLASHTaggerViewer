@@ -44,7 +44,8 @@ jobs:
     env:
       OPENMS_VERSION: 3.0.0 
 
-        - name: Checkout
+    steps:
+    - name: Checkout
       uses: actions/checkout@v3
       with:
         repository: t0mdavid-m/OpenMS
