@@ -90,7 +90,8 @@ def handleInputFiles(uploaded_files):
             session_name = 'deconv-mzMLs'
         elif file.name.endswith('_annotated.mzML'):
             session_name = 'anno-mzMLs'
-
+        print(file.name)
+        print(st.session_state[session_name])
         if file.name not in st.session_state[session_name]:
             with open(
                     Path(st.session_state.workspace, session_name, file.name), "wb"

@@ -355,14 +355,18 @@ class DeconvWorkflow(WorkflowManager):
             current_base = splitext(basename(in_mzML))[0]
             current_time = time.strftime("%Y%m%d-%H%M%S")
 
-            out_anno = join(base_path, 'anno-mzMLs', f'{current_base}_{current_time}_annotated.mzML')
-            out_deconv = join(base_path, 'deconv-mzMLs', f'{current_base}_{current_time}_deconv.mzML')
+            out_anno = Path(join(base_path, 'anno-mzMLs', f'{current_base}_{current_time}_annotated.mzML'))
+            out_deconv = Path(join(base_path, 'deconv-mzMLs', f'{current_base}_{current_time}_deconv.mzML'))
 
             uploaded_files.append(out_anno)
             uploaded_files.append(out_deconv)
-
-            st.session_state['deconv-mzMLs'].append(Path(out_deconv).name)
-            st.session_state['anno-mzMLs'].append(Path(out_anno).name)
+            
+            if  'deconv-mzMLs' not in st.session_state:
+                st.session_state['deconv-mzMLs'] = []
+            if  'anno-mzMLs' not in st.session_state:
+                st.session_state['anno-mzMLs'] = []
+            st.session_state['deconv-mzMLs'].append(out_deconv.name)
+            st.session_state['anno-mzMLs'].append(out_anno.name)
 
         # make directory to store deconv and anno mzML files & initialize data storage
         postprocessingAfterUpload_FD(uploaded_files)
