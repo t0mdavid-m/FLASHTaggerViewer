@@ -7,6 +7,7 @@ from pages.FileUpload import postprocessingAfterUpload_FD
 from os.path import join, splitext, basename, exists, dirname
 from os import makedirs
 from shutil import copyfile, rmtree
+from pathlib import Path
 
 class Workflow(WorkflowManager):
     # Setup pages for upload, parameter, execution and results.
@@ -357,13 +358,14 @@ class DeconvWorkflow(WorkflowManager):
             out_anno = join(base_path, 'anno-mzMLs', f'{current_base}_{current_time}_annotated.mzML')
             out_deconv = join(base_path, 'deconv-mzMLs', f'{current_base}_{current_time}_deconv.mzML')
 
-            #uploaded_files.append(out_db)
             uploaded_files.append(out_anno)
             uploaded_files.append(out_deconv)
 
+            st.session_state['deconv-mzMLs'].append(Path(out_deconv).name)
+            st.session_state['anno-mzMLs'].append(Path(out_anno).name)
+
         # make directory to store deconv and anno mzML files & initialize data storage
         postprocessingAfterUpload_FD(uploaded_files)
-
 
     def execution(self) -> None:
         # Get mzML input files from self.params.
