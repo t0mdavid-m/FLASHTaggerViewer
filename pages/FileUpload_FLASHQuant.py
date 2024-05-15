@@ -16,7 +16,7 @@ def getUploadedFileDF(quant_files, trace_files, resolution_files):
     resolution_files = [Path(f).name for f in resolution_files]
 
     # getting experiment name from annotated file (tsv files can be multiple per experiment)
-    experiment_names = [f[0: f.rfind('.fdq')] for f in quant_files]
+    experiment_names = [f[0: f.rfind('.fq')] for f in quant_files]
 
     df = pd.DataFrame({'Experiment Name': experiment_names,
                        'Quant result Files': quant_files,
@@ -39,7 +39,7 @@ def remove_selected_experiment_files(to_remove: list[str], params: dict) -> dict
         dict: parameters with updated mzML files
     """
     for input_type, df_type, file_postfix in zip(input_file_types, parsed_df_types,
-                                                 ['.fdq.tsv', '.fdq.mts.tsv', '.fdq_shared.tsv']):
+                                                 ['.fq.tsv', '.fq.mts.tsv', '.fq_shared.tsv']):
         input_type_dir = Path(st.session_state["workspace"], input_type)
         # remove all given files from mzML workspace directory and selected files
         for exp_name in to_remove:
@@ -62,11 +62,11 @@ def handleInputFiles(uploaded_files):
             continue
 
         session_name = ''
-        if file.name.endswith('fdq.tsv'):
+        if file.name.endswith('fq.tsv'):
             session_name = 'quant-files'
-        elif file.name.endswith('fdq.mts.tsv'):
+        elif file.name.endswith('fq.mts.tsv'):
             session_name = 'trace-files'
-        elif file.name.endswith('fdq_shared.tsv'):
+        elif file.name.endswith('fq_shared.tsv'):
             session_name = 'conflict-resolution-files'
 
         if file.name not in st.session_state[session_name]:
@@ -118,7 +118,7 @@ def parsingWithProgressBar(infiles_quant, infiles_trace, infiles_resolution):
         for quant_f, trace_f, resolution_f in zip(infiles_quant, infiles_trace, infiles_resolution):
             if not quant_f.endswith('.tsv'):
                 continue
-            exp_name = quant_f[0: quant_f.rfind('.fdq')]
+            exp_name = quant_f[0: quant_f.rfind('.fq')]
 
             with st.spinner('Parsing the experiment %s...' % exp_name):
                 if resolution_f:
@@ -135,7 +135,7 @@ def parsingWithProgressBar(infiles_quant, infiles_trace, infiles_resolution):
                     )
                 st.session_state['quant_dfs'][quant_f] = connectTraceWithResult(quant_df, trace_df)
                 st.session_state['trace_dfs'][trace_f] = []  # need key name, so saving only empty array
-            st.success('Done parsing the experiment %s!' % exp_name)
+            st.success('Done parsing the experiment: %s!' % exp_name)
 
 
 # page initialization
@@ -152,13 +152,13 @@ tabs = st.tabs(["File Upload", "Example Data"])
 
 # Load Example Data
 with tabs[1]:
-    st.markdown("An example truncated file from the E. coli dataset.")
+    st.markdown("An example truncated file from the E. coli & ThermoFisher Pierce Intact Protein Standard Mix dataset.")
     _, c2, _ = st.columns(3)
     if c2.button("Load Example Data", type="primary"):
         # loading and copying example files into default workspace
-        for filetype, session_name in zip(['*fdq.tsv', '*fdq.mts.tsv', '*fdq_shared.tsv'],
+        for filetype, session_name in zip(['*fq.tsv', '*fq.mts.tsv', '*fq_shared.tsv'],
                                           input_file_types):
-            for file in Path("example-data").glob(filetype):
+            for file in Path("example-data/flashquant").glob(filetype):
                 if file.name not in st.session_state[session_name]:
                     shutil.copy(file, Path(st.session_state["workspace"], session_name, file.name))
                     st.session_state[session_name].append(file.name)
@@ -180,9 +180,9 @@ with tabs[0]:
     
     Select data for analysis from the uploaded files shown below.
     
-    **💡 Make sure that the same number of FLASHQuant result files (\*fdq.tsv and \*fdq.mts.tsv) are uploaded!**
+    **💡 Make sure that the same number of FLASHQuant result files (\*fq.tsv and \*fq.mts.tsv) are uploaded!**
     
-    **💡 To visualize conflict resolution, \*fdq_shared.tsv files should be uploaded**
+    **💡 To visualize conflict resolution, \*fq_shared.tsv files should be uploaded**
     """
     )
     with st.form('files_uploader_form', clear_on_submit=True):

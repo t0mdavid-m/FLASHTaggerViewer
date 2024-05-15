@@ -99,11 +99,13 @@ class TagWorkflow(WorkflowManager):
     def upload(self)-> None:
         t = st.tabs(["MS data", "Database"])
         with t[0]:
+            example_data = ['example-data/flashtagger/example_spectrum_%d.mzML' % n for n in [1, 2]]
             # Use the upload method from StreamlitUI to handle mzML file uploads.
-            self.ui.upload_widget(key="mzML-files", name="MS data", file_type="mzML", fallback=['example_spectrum_1.mzML', 'example_spectrum_2.mzML'])
+            self.ui.upload_widget(key="mzML-files", name="MS data", file_type="mzML", fallback=example_data)
         with t[1]:
             # Example with fallback data (not used in workflow)
-            self.ui.upload_widget(key="fasta-file", name="Database", file_type="fasta", enable_directory=False, fallback='example_database.fasta')
+            self.ui.upload_widget(key="fasta-file", name="Database", file_type="fasta", enable_directory=False,
+                                  fallback='example-data/flashtagger/example_database.fasta')
 
 
     def configure(self) -> None:
@@ -327,7 +329,8 @@ class DeconvWorkflow(WorkflowManager):
 
     def upload(self)-> None:
         # Use the upload method from StreamlitUI to handle mzML file uploads.
-        self.ui.upload_widget(key="mzML-files", name="MS data", file_type="mzML", fallback=['example_spectrum_1.mzML', 'example_spectrum_2.mzML'])
+        self.ui.upload_widget(key="mzML-files", name="MS data", file_type="mzML",
+                              fallback=['example-data/flashdeconv/example_fd.mzML'])
 
     def configure(self) -> None:
         # Allow users to select mzML files for the analysis.
