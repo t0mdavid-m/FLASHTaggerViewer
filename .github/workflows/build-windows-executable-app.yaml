@@ -1,9 +1,10 @@
 name: Build executable for Windows
+
 on:
   push:
-    branches: [ "main" , "TaggerViewerDeploy"]
+    branches: [ "main", "TaggerViewerDeploy"]
   pull_request:
-    branches: [ "main" , "TaggerViewerDeploy"]
+    branches: [ "main", "TaggerViewerDeploy"]
 
 jobs:
   build-vue-js-component:
