@@ -131,7 +131,8 @@ class TagWorkflow(WorkflowManager):
                     'flanking_mass_tol', 'max_iso_error_count', 
                     'min_matched_aa', 'fdr', 'keep_decoy', 'ida_log',
                     'write_detail', 'report_FDR', 'quant_method'
-                ]
+                ],
+                display_subsections=True
             )
         with t[1]:
             # Parameters for FeatureFinderMetabo TOPP tool.
@@ -142,7 +143,8 @@ class TagWorkflow(WorkflowManager):
                     'use_RNA_averagine', 'tol', 'min_mass', 'max_mass',
                     'min_charge', 'max_charge', 'precursor_charge',
                     'precursor_mz', 'min_cos', 'min_snr'
-                ]
+                ],
+                display_subsections=True
             )
 
     def pp(self) -> None:
@@ -335,7 +337,8 @@ class DeconvWorkflow(WorkflowManager):
             'FLASHDeconv',
             exclude_parameters = [
                 'ida_log'
-            ]
+            ],
+            display_subsections=True
         )
     
     def execution(self) -> None:
