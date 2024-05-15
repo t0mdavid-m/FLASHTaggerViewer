@@ -1,8 +1,6 @@
 import streamlit as st
 from src.common import page_setup
-from src.workflow.WorkflowManager import WorkflowManager
-from src.Workflow import TagWorkflow, Workflow
-import pyopenms as oms
+from src.Workflow import TagWorkflow
 
 
 # The rest of the page can, but does not have to be changed

@@ -8,6 +8,10 @@ from src.common import page_setup, v_space, save_params, reset_directory
 from pages.FileUpload import remove_selected_mzML_files
 
 
+input_file_types = ["deconv-mzMLs", "anno-mzMLs", "tags-tsv", "proteins-tsv"]
+parsed_df_types = ["deconv_dfs", "anno_dfs", "tag_dfs", "protein_dfs"]
+
+
 def initializeWorkspace(input_file_types_: list, parsed_df_types_: list) -> None:
     """
     Set up the required directory and session states
@@ -167,13 +171,20 @@ def content():
     parsed_df_types = ["deconv_dfs", "anno_dfs", "tag_dfs", "protein_dfs"]
     initializeWorkspace(input_types, parsed_df_types)
 
+
+# for Workflow
+def postprocessingAfterUpload_Tagger(uploaded_files: list) -> None:
+    initializeWorkspace(input_file_types, parsed_df_types)
+    handleInputFiles(uploaded_files)
+    parseUploadedFiles(reparse=True)
+    showUploadedFilesTable()
+
+
 if __name__ == '__main__':
 
     params = page_setup()
 
     # make directory to store deconv and anno mzML files & initialize data storage
-    input_file_types = ["deconv-mzMLs", "anno-mzMLs", "tags-tsv", "proteins-tsv"]
-    parsed_df_types = ["deconv_dfs", "anno_dfs", "tag_dfs", "protein_dfs"]
     initializeWorkspace(input_file_types, parsed_df_types)
 
     st.title("File Upload")
