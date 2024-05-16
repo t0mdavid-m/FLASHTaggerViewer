@@ -114,10 +114,10 @@ class TagWorkflow(WorkflowManager):
         self.ui.select_input_file("fasta-file", multiple=False)
 
         self.ui.input_widget(
-            'generate_decoys', name='Use target-decoy approach?', widget_type='checkbox'
+            'generate_decoys', name='Use target-decoy approach?', widget_type='checkbox', default=True
         )
         self.ui.input_widget(
-            'few_proteins', name='Do you expect <100 Proteins?', widget_type='checkbox'
+            'few_proteins', name='Do you expect <100 Proteins?', widget_type='checkbox', default=False
         )
 
         # Create tabs for different analysis steps.
@@ -232,22 +232,27 @@ class TagWorkflow(WorkflowManager):
             out_tag = join(base_path, 'tags-tsv', f'{current_base}_{current_time}_tagged.tsv')
             out_protein = join(base_path, 'proteins-tsv', f'{current_base}_{current_time}_protein.tsv')
             #decoy_db = join(temp_path, f'{current_base}_db.fasta')
+            
+            if self.executor.parameter_manager.get_parameters_from_json()['generate_decoys']:
+                if self.executor.parameter_manager.get_parameters_from_json()['few_proteins']:
+                    ratio = 100
+                else:
+                    ratio = 1
+                self.executor.run_topp(
+                    'DecoyDatabase',
+                    {
+                        'in' : [database[0]],
+                        'out' : [out_db],
+                    },
+                    params_manual = {
+                        'method' : 'shuffle',
+                        'shuffle_decoy_ratio' : ratio,
+                        'enzyme' : 'no cleavage',
+                    }
+                )
+            else:
+                copyfile(database[0], out_db)
 
-            # self.executor.run_topp(
-            #     'DecoyDatabase',
-            #     {
-            #         'in' : [database[0]],
-            #         'out' : [out_db],
-            #     },
-            #     params_manual = {
-            #         'method' : 'shuffle',
-            #         'shuffle_decoy_ratio' : 100,
-            #         'enzyme' : 'no cleavage',
-            #     }
-            # )
-            copyfile(database[0], out_db)
-
-            # TODO: Parallelize
             self.executor.run_topp(
                 'FLASHDeconv',
                 input_output={
