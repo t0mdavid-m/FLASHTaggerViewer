@@ -29,11 +29,11 @@ def sendDataToJS(selected_data, layout_info_per_exp):
     selected_db_file = selected_data.iloc[0]['DB Files']
 
     # getting data from mzML files
-    spec_df = st.session_state['deconv_dfs'][selected_deconv_file]
-    anno_df = st.session_state['anno_dfs'][selected_anno_file]
+    spec_df = st.session_state['deconv_dfs_tagger'][selected_deconv_file]
+    anno_df = st.session_state['anno_dfs_tagger'][selected_anno_file]
     #spec_df.to_excel('Deconv.xlsx')
     #anno_df.to_excel('Anno.xlsx')
-    tag_df = st.session_state['tag_dfs'][selected_tag_file]
+    tag_df = st.session_state['tag_dfs_tagger'][selected_tag_file]
 
     # Process tag df into a linear data format
     new_tag_df = {c : [] for c in tag_df.columns}
@@ -70,7 +70,7 @@ def sendDataToJS(selected_data, layout_info_per_exp):
     )
 
     # protein_db = st.session_state['protein_db'][selected_db_file]
-    protein_df = st.session_state['protein_dfs'][selected_db_file]
+    protein_df = st.session_state['protein_dfs_tagger'][selected_db_file]
     protein_df['length'] = protein_df['ProteinSequence'].apply(lambda x : len(x))
     protein_df = protein_df.rename(
         columns={
@@ -274,7 +274,7 @@ def content():
     #setSequenceViewInDefaultView()
     st.session_state['progress_bar_space'] = st.container()
     input_types = ["deconv-mzMLs", "anno-mzMLs", "tags-tsv", "proteins-tsv"]
-    parsed_df_types = ["deconv_dfs", "anno_dfs", "tag_dfs", "protein_dfs"]
+    parsed_df_types = ["deconv_dfs_tagger", "anno_dfs_tagger", "tag_dfs_tagger", "protein_dfs_tagger"]
     initializeWorkspace(input_types, parsed_df_types)
     parseUploadedFiles()
     showUploadedFilesTable()
@@ -318,8 +318,8 @@ def content():
 
     selected_tags = selected_exp0.iloc[0]['Tag Files']
     selected_proteins = selected_exp0.iloc[0]['DB Files']
-    tag_df = st.session_state['tag_dfs'][selected_tags]
-    protein_df = st.session_state['protein_dfs'][selected_proteins]
+    tag_df = st.session_state['tag_dfs_tagger'][selected_tags]
+    protein_df = st.session_state['protein_dfs_tagger'][selected_proteins]
 
     tag_buffer = StringIO()
     tag_df.to_csv(tag_buffer, sep='\t', index=False)

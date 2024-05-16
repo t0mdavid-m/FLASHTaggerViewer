@@ -9,7 +9,7 @@ from pages.FileUpload import remove_selected_mzML_files
 
 
 input_file_types = ["deconv-mzMLs", "anno-mzMLs", "tags-tsv", "proteins-tsv"]
-parsed_df_types = ["deconv_dfs", "anno_dfs", "tag_dfs", "protein_dfs"]
+parsed_df_types = ["deconv_dfs_tagger", "anno_dfs_tagger", "tag_dfs_tagger", "protein_dfs_tagger"]
 
 
 def initializeWorkspace(input_file_types_: list, parsed_df_types_: list) -> None:
@@ -49,10 +49,10 @@ def getUploadedFileDF(deconv_files, anno_files, tag_files, db_files):
     return df
 
 def showUploadedFilesTable():
-    deconv_files = sorted(st.session_state["deconv_dfs"].keys())
-    anno_files = sorted(st.session_state["anno_dfs"].keys())
-    tag_files = sorted(st.session_state["tag_dfs"].keys())
-    db_files = sorted(st.session_state["protein_dfs"].keys())
+    deconv_files = sorted(st.session_state["deconv_dfs_tagger"].keys())
+    anno_files = sorted(st.session_state["anno_dfs_tagger"].keys())
+    tag_files = sorted(st.session_state["tag_dfs_tagger"].keys())
+    db_files = sorted(st.session_state["protein_dfs_tagger"].keys())
 
     # error message if files not exist
     if len(deconv_files) == 0 and len(anno_files) == 0:
@@ -106,18 +106,18 @@ def parseUploadedFiles(reparse=False):
     # db_files = st.session_state['db-fasta']
     protein_files = st.session_state['proteins-tsv']
     # anno_files = Path(st.session_state['anno-mzMLs']).iterdir()
-    new_deconv_files = [f for f in deconv_files if f not in st.session_state['deconv_dfs'] or reparse]
-    new_anno_files = [f for f in anno_files if f not in st.session_state['anno_dfs'] or reparse]
-    new_tag_files = [f for f in tag_files if f not in st.session_state['tag_dfs'] or reparse]
-    new_protein_files = [f for f in protein_files if f not in st.session_state['protein_dfs'] or reparse]
+    new_deconv_files = [f for f in deconv_files if f not in st.session_state['deconv_dfs_tagger'] or reparse]
+    new_anno_files = [f for f in anno_files if f not in st.session_state['anno_dfs_tagger'] or reparse]
+    new_tag_files = [f for f in tag_files if f not in st.session_state['tag_dfs_tagger'] or reparse]
+    new_protein_files = [f for f in protein_files if f not in st.session_state['protein_dfs_tagger'] or reparse]
     # new_db_files = [f for f in db_files if f not in st.session_state['protein_db']]
 
     # TODO: Find better solution when enabling file upload
-    all_files = {t.split('_')[0] for t in new_tag_files}
-    new_deconv_files = [f for f in new_deconv_files if f.split('_')[0] in all_files]
-    new_anno_files = [f for f in new_anno_files if f.split('_')[0] in all_files]
-    new_tag_files = [f for f in new_tag_files if f.split('_')[0] in all_files]
-    new_protein_files = [f for f in new_protein_files if f.split('_')[0] in all_files]
+    all_files = {'_'.join(t.split('_')[:-1]) for t in new_tag_files}
+    new_deconv_files = [f for f in new_deconv_files if '_'.join(f.split('_')[:-1]) in all_files]
+    new_anno_files = [f for f in new_anno_files if '_'.join(f.split('_')[:-1]) in all_files]
+    new_tag_files = [f for f in new_tag_files if '_'.join(f.split('_')[:-1]) in all_files]
+    new_protein_files = [f for f in new_protein_files if '_'.join(f.split('_')[:-1]) in all_files]
 
     # if newly uploaded files are not as needed
     if len(new_deconv_files)==0 and len(new_anno_files)==0 and len(new_tag_files)==0 and len(new_protein_files)==0: # if no newly uploaded files, move on
@@ -156,11 +156,11 @@ def parsingWithProgressBar(infiles_deconv, infiles_anno, infiles_tag, infiles_pr
                     Path(st.session_state["workspace"], "proteins-tsv", protein_f)
                     # Path(st.session_state["workspace"], "db-fasta", db_f)
                 )
-                st.session_state['anno_dfs'][anno_f] = anno_df
-                st.session_state['deconv_dfs'][deconv_f] = spec_df
-                st.session_state['tag_dfs'][tag_f] = tag_df
+                st.session_state['anno_dfs_tagger'][anno_f] = anno_df
+                st.session_state['deconv_dfs_tagger'][deconv_f] = spec_df
+                st.session_state['tag_dfs_tagger'][tag_f] = tag_df
                 # st.session_state['protein_db'][db_f] = db
-                st.session_state['protein_dfs'][protein_f] = protein_df
+                st.session_state['protein_dfs_tagger'][protein_f] = protein_df
             successes.append(st.success('Done parsing the experiment %s!'%exp_name))
         for success in successes:
             success.empty()
@@ -168,7 +168,7 @@ def parsingWithProgressBar(infiles_deconv, infiles_anno, infiles_tag, infiles_pr
 def content():
     # make directory to store deconv and anno mzML files & initialize data storage
     input_types = ["deconv-mzMLs", "anno-mzMLs", "tags-tsv", "proteins-tsv"]
-    parsed_df_types = ["deconv_dfs", "anno_dfs", "tag_dfs", "protein_dfs"]
+    parsed_df_types = ["deconv_dfs_tagger", "anno_dfs_tagger", "tag_dfs_tagger", "protein_dfs_tagger"]
     initializeWorkspace(input_types, parsed_df_types)
 
 
@@ -246,10 +246,10 @@ if __name__ == '__main__':
     parseUploadedFiles()
 
     # for error message or list of uploaded files
-    deconv_files = sorted(st.session_state["deconv_dfs"].keys())
-    anno_files = sorted(st.session_state["anno_dfs"].keys())
-    tag_files = sorted(st.session_state["tag_dfs"].keys())
-    db_files = sorted(st.session_state["protein_dfs"].keys())
+    deconv_files = sorted(st.session_state["deconv_dfs_tagger"].keys())
+    anno_files = sorted(st.session_state["anno_dfs_tagger"].keys())
+    tag_files = sorted(st.session_state["tag_dfs_tagger"].keys())
+    db_files = sorted(st.session_state["protein_dfs_tagger"].keys())
 
     # error message if files not exist
     if len(deconv_files) == 0 and len(anno_files) == 0:
