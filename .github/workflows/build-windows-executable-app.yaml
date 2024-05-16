@@ -273,4 +273,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: OpenMS-App
-        path: OpenMS-App.zip
+        path: streamlit_exe
