@@ -264,9 +264,9 @@ jobs:
       with:
           name: OpenMS-share
           
-    - name: Compress streamlit_exe folder to OpenMS-App.zip
-      run: |
-        7z a OpenMS-App.zip ./streamlit_exe/* -r
+    #- name: Compress streamlit_exe folder to OpenMS-App.zip
+    #  run: |
+    #    7z a OpenMS-App.zip ./streamlit_exe/* -r
 
     - name: Upload artifact
       uses: actions/upload-artifact@v3
