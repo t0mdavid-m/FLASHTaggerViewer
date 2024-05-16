@@ -516,7 +516,8 @@ class StreamlitUI:
             num_cols (int, optional): Number of columns to use for the layout. Defaults to 3.
             exclude_parameters (List[str], optional): List of parameter names to exclude from the widget. Defaults to an empty list.
             include_parameters (List[str], optional): List of parameter names to include in the widget. Defaults to an empty list.
-            display_full_parameter_names (bool, optional): Whether to display the full parameter names. Defaults to True.
+            display_full_parameter_names (bool, optional): Whether to display the full parameter names. Defaults to False.
+            display_subsections (bool, optional): Whether to split parameters into subsections based on the prefix (disables display_full_parameter_names). Defaults to False.
             custom_defaults (dict, optional): Dictionary of custom defaults to use. Defaults to an empty dict.
         """
         # write defaults ini files
