@@ -252,6 +252,7 @@ jobs:
         cp -r .streamlit streamlit_exe
         cp -r openms-bin streamlit_exe/bin
         cp -r share streamlit_exe/share
+        cp -r js-dist streamlit_exe/js-dist
         cp app.py streamlit_exe
 
     - name: Delete OpenMS bin artifact
