@@ -1,6 +1,6 @@
 import streamlit as st
 import re
-from src.common import page_setup, save_params
+from src.common import page_setup, save_params, v_space
 
 fixed_mod_cysteine = ['No modification',
                       'Carbamidomethyl (+57)',
@@ -24,14 +24,29 @@ def validateSequenceInput(input_seq):
     pattern = re.compile("^[ac-ik-wyAC-IK-WY]+$")  # only alphabet except for BJXZ
     if not pattern.match(seq):
         return False
-
     return True
+
+
+def emptySequenceInput():
+    for key in ['input_sequence', 'fixed_mod_cysteine', 'fixed_mod_methionine']:
+        if key in st.session_state:
+            del st.session_state[key]
+    st.session_state['reset_sequence_input'] = True
 
 
 # page initialization
 params = page_setup()
 
-st.title("Proteoform Sequence Input")
+# for resetting the form (cannot be done after form is instantiated)
+if 'reset_sequence_input' not in st.session_state:
+    st.session_state['reset_sequence_input'] = False
+
+# title and reset buttons
+c1, c2 = st.columns([8, 1])
+c1.title("Proteoform Sequence Input")
+v_space(1, c2)
+if c2.button('Reset'):
+    emptySequenceInput()
 
 # if any sequence was submitted before
 if 'input_sequence' in st.session_state and st.session_state.input_sequence \
@@ -45,6 +60,13 @@ if 'fixed_mod_methionine' in st.session_state and st.session_state.fixed_mod_met
         and 'selected_fixed_mod_methionine' not in st.session_state:
     st.session_state['selected_fixed_mod_methionine'] = st.session_state.fixed_mod_methionine
 
+# clean up the entries of form, if needed
+if st.session_state['reset_sequence_input']:
+    st.session_state['sequence_text'] = ''
+    st.session_state['selected_fixed_mod_cysteine'] = 'No modification'
+    st.session_state['selected_fixed_mod_methionine'] = 'No modification'
+    st.session_state['reset_sequence_input'] = False
+
 with st.form('sequence_input'):
     # sequence
     st.text_area('Proteoform sequence', key='sequence_text')
@@ -55,11 +77,16 @@ with st.form('sequence_input'):
                  key='selected_fixed_mod_cysteine', placeholder='No modification')
     c2.selectbox('Fixed modification: Methionine', fixed_mod_methionine,
                  key='selected_fixed_mod_methionine', placeholder='No modification')
-    _, c2 = st.columns([9, 1])
+    _, c2 = st.columns([8, 1])
     submitted = c2.form_submit_button("Save")
     if submitted:
-        if 'sequence_text' in st.session_state and validateSequenceInput(st.session_state['sequence_text']):
-            st.success('Proteoform sequence is submitted')
+        if 'input_sequence' in st.session_state:  # initialize
+            del st.session_state['input_sequence']
+        if st.session_state['sequence_text'] == '':
+            emptySequenceInput()
+            st.rerun()
+        elif validateSequenceInput(st.session_state['sequence_text']):
+            st.success('Proteoform sequence is submitted: ' + st.session_state['sequence_text'])
             # save information for sequence view
             st.session_state['input_sequence'] = ''.join(st.session_state['sequence_text'].split()).upper()
 
@@ -70,7 +97,6 @@ with st.form('sequence_input'):
             if 'selected_fixed_mod_methionine' in st.session_state \
                     and st.session_state['selected_fixed_mod_methionine'] != 'No modification':
                 st.session_state['fixed_mod_methionine'] = st.session_state.selected_fixed_mod_methionine
-            del st.session_state['sequence_text']
         else:
             st.error('Error: sequence input is not valid')
 
