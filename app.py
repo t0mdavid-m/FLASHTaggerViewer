@@ -45,6 +45,7 @@ def flashtagPages():
         Page("app.py", "FLASHViewer", "🏠"),
         Page("pages/FLASHTaggerWorkflow.py", "Workflow", "⚙️"),
         Page("pages/FileUploadTagger.py", "File Upload", "📁"),
+        Page("pages/LayoutManagerTagger.py", "Layout Manager", "📝️"),
         Page("pages/FLASHTaggerViewer.py", "Viewer", "👀"),
     ])
 
