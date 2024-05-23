@@ -5,7 +5,6 @@ import os, shutil
 import numpy as np
 from src.masstable import parseFLASHDeconvOutput, parseFLASHTaggerOutput
 from src.common import page_setup, v_space, save_params, reset_directory
-from pages.FileUpload import remove_selected_mzML_files
 
 
 input_file_types = ["deconv-mzMLs", "anno-mzMLs", "tags-tsv", "proteins-tsv"]
@@ -45,8 +44,37 @@ def getUploadedFileDF(deconv_files, anno_files, tag_files, db_files):
                        'Deconvolved Files': deconv_files,
                        'Annotated Files': anno_files,
                        'Tag Files' : tag_files,
-                       'DB Files' : db_files})
+                       'Protein Files' : db_files})
     return df
+
+def remove_selected_mzML_files(to_remove: list[str], params: dict) -> dict:
+    """
+    Removes selected mzML files from the mzML directory. (From fileUpload.py)
+
+    Args:
+        to_remove (List[str]): List of mzML files to remove.
+        params (dict): Parameters.
+
+
+    Returns:
+        dict: parameters with updated mzML files
+    """
+    for input_type, df_type, file_postfix in zip(input_file_types, parsed_df_types,
+                                                 ['_deconv.mzML', '_annotated.mzML', '_tagged.tsv', '_protein.tsv']):
+        mzml_dir = Path(st.session_state["workspace"], input_type)
+        # remove all given files from mzML workspace directory and selected files
+        for exp_name in to_remove:
+            file_name = exp_name + file_postfix
+            Path(mzml_dir, file_name).unlink()
+            del st.session_state[df_type][file_name]  # removing key
+
+    # update the experiment df table
+    tmp_df = st.session_state["experiment-df"]
+    tmp_df.drop(tmp_df.loc[tmp_df['Experiment Name'].isin(to_remove)].index, inplace=True)
+    st.session_state["experiment-df"] = tmp_df
+
+    st.success("Selected experiments were removed!")
+    return params
 
 def showUploadedFilesTable():
     deconv_files = sorted(st.session_state["deconv_dfs_tagger"].keys())
@@ -75,7 +103,7 @@ def showUploadedFilesTable():
 
 def handleInputFiles(uploaded_files):
     for file in uploaded_files:
-        file = Path(file)
+        #file = Path(file)
         if not (file.name.endswith("mzML") or file.name.endswith("tsv") or file.name.endswith("fasta")):
             continue
 
@@ -175,7 +203,7 @@ def content():
 # for Workflow
 def postprocessingAfterUpload_Tagger(uploaded_files: list) -> None:
     initializeWorkspace(input_file_types, parsed_df_types)
-    handleInputFiles(uploaded_files)
+    #handleInputFiles(uploaded_files)
     parseUploadedFiles(reparse=True)
     showUploadedFilesTable()
 
@@ -193,13 +221,13 @@ if __name__ == '__main__':
 
     # Load Example Data
     with tabs[1]:
-        st.markdown("An example truncated file from the E. coli dataset.")
+        #st.markdown("An example truncated file from the E. coli dataset.")
         _, c2, _ = st.columns(3)
         if c2.button("Load Example Data", type="primary"):
             # loading and copying example files into default workspace
             for filetype, session_name in zip(['*annotated.mzML', '*deconv.mzML', '*tagged.tsv', '*protein.tsv'],
                                             ['anno-mzMLs', 'deconv-mzMLs', 'tags-tsv', 'proteins-tsv']):
-                for file in Path("example-data").glob(filetype):
+                for file in Path("example-data", "flashtagger").glob(filetype):
                     if file.name not in st.session_state[session_name]:
                         shutil.copy(file, Path(st.session_state["workspace"], session_name, file.name))
                         st.session_state[session_name].append(file.name)
@@ -208,27 +236,27 @@ if __name__ == '__main__':
 
     # Upload files via upload widget
     with tabs[0]:
-        st.subheader("**Upload FLASHDeconv output files (\*_annotated.mzML & \*_deconv.mzML)**")
+        st.subheader("**Upload FLASHDeconv & FLASHTagger output files (\*_annotated.mzML, \*_deconv.mzML, \*_tagged.tsv & \*_protein.tsv)**")
         # Display info how to upload files
         st.info(
             """
         **💡 How to upload files**
         
         1. Browse files on your computer or drag and drops files
-        2. Click the **Add the uploaded mzML files** button to use them in the workflows
+        2. Click the **Add files to workspace** button to use them in the viewer
         
         Select data for analysis from the uploaded files shown below.
         
-        **💡 Make sure that the same number of deconvolved and annotated mzML files are uploaded!**
+        **💡 Make sure that the same number of deconvolved and annotated mzML and FLASHTagger output files files are uploaded!**
         """
         )
         with st.form('input_mzml', clear_on_submit=True):
             uploaded_file = st.file_uploader(
-                "FLASHDeconv output mzML files", accept_multiple_files=True
+                "FLASHDeconv & FLASHTagger output files", accept_multiple_files=True
             )
             _, c2, _ = st.columns(3)
             # User needs to click button to upload selected files
-            if c2.form_submit_button("Add mzML files to workspace", type="primary"):
+            if c2.form_submit_button("Add files to workspace", type="primary"):
                 # Copy uploaded mzML files to deconv-mzML-files directory
                 if uploaded_file:
                     # A list of files is required, since online allows only single upload, create a list
@@ -258,8 +286,12 @@ if __name__ == '__main__':
         st.error("FLASHDeconv deconvolved mzML file is not added yet!")
     elif len(anno_files) == 0:
         st.error("FLASHDeconv annotated mzML file is not added yet!")
-    elif len(deconv_files) != len(anno_files):
-        st.error("The same number of deconvolved and annotated mzML file should be uploaded!")
+    elif len(tag_files) == 0:
+        st.error("FLASHTagger tag tsv file is not added yet!")
+    elif len(db_files) == 0:
+        st.error("FLASHTagger protein tsv file is not added yet!")
+    elif not np.all(np.array([len(deconv_files), len(tag_files), len(db_files)]) == len(anno_files)):
+        st.error("The same number of each file type should be uploaded!")
     else:
         v_space(2)
         st.session_state["experiment-df"] = getUploadedFileDF(deconv_files, anno_files, tag_files, db_files)
@@ -268,9 +300,9 @@ if __name__ == '__main__':
         v_space(1)
 
         # Remove files
-        with st.expander("🗑️ Remove mzML files"):
+        with st.expander("🗑️ Remove experiments"):
             to_remove = st.multiselect(
-                "select mzML files", options=st.session_state["experiment-df"]['Experiment Name']
+                "select experiments", options=st.session_state["experiment-df"]['Experiment Name']
             )
             c1, c2 = st.columns(2)
             if c2.button(
