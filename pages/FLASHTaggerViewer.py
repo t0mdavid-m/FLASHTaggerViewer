@@ -232,26 +232,26 @@ def content():
                 sendDataToJS(selected_exp, layout_info, 'flash_viewer_grid_%d' % exp_index)
 
 
-    selected_tags = selected_exp0.iloc[0]['Tag Files']
-    selected_proteins = selected_exp0.iloc[0]['Protein Files']
-    tag_df = st.session_state['tag_dfs_tagger'][selected_tags]
-    protein_df = st.session_state['protein_dfs_tagger'][selected_proteins]
+    # selected_tags = selected_exp0.iloc[0]['Tag Files']
+    # selected_proteins = selected_exp0.iloc[0]['Protein Files']
+    # tag_df = st.session_state['tag_dfs_tagger'][selected_tags]
+    # protein_df = st.session_state['protein_dfs_tagger'][selected_proteins]
 
-    tag_buffer = StringIO()
-    tag_df.to_csv(tag_buffer, sep='\t', index=False)
-    tag_buffer.seek(0)
+    # tag_buffer = StringIO()
+    # tag_df.to_csv(tag_buffer, sep='\t', index=False)
+    # tag_buffer.seek(0)
 
-    protein_buffer = StringIO()
-    protein_df.to_csv(protein_buffer, sep='\t', index=False)
-    protein_buffer.seek(0)
+    # protein_buffer = StringIO()
+    # protein_df.to_csv(protein_buffer, sep='\t', index=False)
+    # protein_buffer.seek(0)
 
-    zip_buffer = BytesIO()
-    with ZipFile(zip_buffer, 'w', ZIP_DEFLATED) as zip_file:
-        zip_file.writestr('tags.tsv', tag_buffer.getvalue())
-        zip_file.writestr('proteins.tsv', protein_buffer.getvalue())
-    zip_buffer.seek(0)
+    # zip_buffer = BytesIO()
+    # with ZipFile(zip_buffer, 'w', ZIP_DEFLATED) as zip_file:
+    #     zip_file.writestr('tags.tsv', tag_buffer.getvalue())
+    #     zip_file.writestr('proteins.tsv', protein_buffer.getvalue())
+    # zip_buffer.seek(0)
     
-    st.download_button("Download ⬇️", zip_buffer, file_name=f'{st.session_state.selected_experiment0}.zip')
+    # st.download_button("Download ⬇️", zip_buffer, file_name=f'{st.session_state.selected_experiment0}.zip')
 
 
 if __name__ == "__main__":

@@ -232,6 +232,14 @@ class TagWorkflow(WorkflowManager):
             out_tag = join(base_path, 'tags-tsv', f'{current_base}_{current_time}_tagged.tsv')
             out_protein = join(base_path, 'proteins-tsv', f'{current_base}_{current_time}_protein.tsv')
             #decoy_db = join(temp_path, f'{current_base}_db.fasta')
+
+            # Get folder name
+            folder_path = join(base_path, 'FLASHTaggerOutput', '%s_%s'%(current_base, current_time))
+
+            if exists(folder_path):
+                rmtree(folder_path)
+            makedirs(folder_path)
+
             
             if self.executor.parameter_manager.get_parameters_from_json()['generate_decoys']:
                 if self.executor.parameter_manager.get_parameters_from_json()['few_proteins']:
@@ -278,6 +286,12 @@ class TagWorkflow(WorkflowManager):
             uploaded_files.append(out_deconv)
             uploaded_files.append(out_tag)
             uploaded_files.append(out_protein)
+
+            copyfile(out_db, join(folder_path, 'database.fasta'))
+            copyfile(out_anno, join(folder_path, 'annotated.mzML'))
+            copyfile(out_deconv, join(folder_path, 'out.mzML'))
+            copyfile(out_tag, join(folder_path, 'tags.tsv'))
+            copyfile(out_protein, join(folder_path, 'proteins.tsv'))
 
 
         # make directory to store deconv and anno mzML files & initialize data storage
