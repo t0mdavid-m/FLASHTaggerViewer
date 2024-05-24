@@ -37,8 +37,8 @@ def flashdeconvPages():
         Page("pages/LayoutManager.py", "Layout Manager", "📝️"),
         Page("pages/FLASHDeconvViewer.py", "Viewer", "👀"),
         Page("pages/FLASHDeconvDownload.py", "Download", "⬇️"),
-        Page("pages/FLASHFDR.py", "ECDF Plot", "📈"),
-        Page("pages/FileUploadFDR.py", "FDR File Upload", "📊"),
+        #Page("pages/FLASHFDR.py", "ECDF Plot", "📈"),
+        #Page("pages/FileUploadFDR.py", "FDR File Upload", "📊"),
     ])
 
 
