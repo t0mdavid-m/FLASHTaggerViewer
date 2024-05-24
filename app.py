@@ -19,39 +19,41 @@ Returns:
 """
 
 import sys
-
 import streamlit as st
-
+from pathlib import Path
 from src.captcha_ import captcha_control
 from src.common import page_setup, save_params
-
 from st_pages import Page, show_pages
 
 params = page_setup(page="main")
-
 
 
 def flashdeconvPages():
     show_pages([
         Page("app.py", "FLASHViewer", "🏠"),
         Page("pages/FLASHDeconvWorkflow.py", "Workflow", "⚙️"),
+        Page("pages/FileUpload.py", "File Upload", "📁"),
+        Page("pages/SequenceInput.py", "Sequence Input", "🧵"),
+        Page("pages/LayoutManager.py", "Layout Manager", "📝️"),
+        Page("pages/FLASHDeconvViewer.py", "Viewer", "👀"),
         Page("pages/FLASHDeconvDownload.py", "Download", "⬇️"),
-        #Page("pages/FileUpload.py", "File Upload", "📁"),
-        #Page("pages/SequenceInput.py", "Sequence Input", "🧵"),
-        #Page("pages/LayoutManager.py", "Layout Manager", "⚙️"),
-        #Page("pages/FLASHDeconvViewer.py", "Viewer", "👀"),
     ])
+
 
 def flashtagPages():
     show_pages([
         Page("app.py", "FLASHViewer", "🏠"),
         Page("pages/FLASHTaggerWorkflow.py", "Workflow", "⚙️"),
+        Page("pages/FileUploadTagger.py", "File Upload", "📁"),
+        Page("pages/LayoutManagerTagger.py", "Layout Manager", "📝️"),
         Page("pages/FLASHTaggerViewer.py", "Viewer", "👀"),
+        Page("pages/FLASHTaggerDownload.py", "Download", "⬇️"),
     ])
+
 
 def flashquantPages():
     show_pages([
-        Page("pages/FLASHViewer.py", "FLASHViewer", "🏠"),
+        Page("app.py", "FLASHViewer", "🏠"),
         Page("pages/FileUpload_FLASHQuant.py", "File Upload", "📁"),
         Page("pages/FLASHQuantViewer.py", "Viewer", "👀"),
     ])
@@ -66,8 +68,14 @@ page_names_to_funcs = {
 
 def onToolChange():
     if 'changed_tool_name' in st.session_state:
-        st.session_state['tool_index'] = 0 if st.session_state.changed_tool_name == 'FLASHDeconv' else 1
-
+        match st.session_state.changed_tool_name:
+            case 'FLASHDeconv':
+                st.session_state['tool_index'] = 0
+            case 'FLASHTagger':
+                st.session_state['tool_index'] = 1
+            case 'FLASHQuant':
+                st.session_state['tool_index'] = 2
+        st.rerun()  # reload the page to sync the change
 
 
 def main():
@@ -85,19 +93,36 @@ def main():
 
     st.info("""
         **💡 How to run FLASHViewer**
-        1. Go to the **⚙️ Workflow** page through the sidebar and run your analysis.
+        1. Go to the **⚙️ Workflow** page through the sidebar and run your analysis.\
+            OR, go to the **📁 File Upload** page through the sidebar and upload FLASHDeconv output files (\*_annotated.mzML & \*_deconv.mzML)
         2. Click the **👀 Viewer** page on the sidebar to view the results in detail.
             
-            **\***For FLASHDeconv only download of results is supported.
+            **\***Download of results is supported.only for FLASHDeconv
         """)
 
     # when entered into other page, key is resetting (emptied) - thus set the value with index
-    # st.selectbox("Choose a tool", ['FLASHTagViewer', 'FLASHDeconv', 'FLASHQuant'], index=st.session_state.tool_index,
-    st.selectbox("Choose a tool", ['FLASHDeconv', 'FLASHTagger'], index=st.session_state.tool_index,
+    st.selectbox("Choose a tool", ['FLASHDeconv', 'FLASHTagger', 'FLASHQuant'], index=st.session_state.tool_index,
                  on_change=onToolChange(), key='changed_tool_name')
     page_names_to_funcs[st.session_state.changed_tool_name]()
-    
+
+
+    if Path("OpenMS-App.zip").exists():
+        st.text("")
+        st.text("")
+        st.markdown("""
+        Download the latest version for Windows by clicking the button below.
+        """)
+        with open("OpenMS-App.zip", "rb") as file:
+            st.download_button(
+                label="Download for Windows",
+                data=file,
+                file_name="OpenMS-App.zip",
+                mime="archive/zip",
+                type="primary",
+            )
+            
     save_params(params)
+
 
 # Check if the script is run in local mode (e.g., "streamlit run app.py local")
 if "local" in sys.argv:
@@ -106,7 +131,6 @@ if "local" in sys.argv:
 
 # If not in local mode, assume it's hosted/online mode
 else:
-
     show_pages([
         Page("app.py", "FLASHViewer", "🏠"),
     ])

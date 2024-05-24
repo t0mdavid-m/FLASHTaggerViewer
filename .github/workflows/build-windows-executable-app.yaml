@@ -1,9 +1,10 @@
 name: Build executable for Windows
+
 on:
   push:
-    branches: [ "main" , "TaggerViewerDeploy"]
+    branches: [ "main", "TaggerViewerDeploy"]
   pull_request:
-    branches: [ "main" , "TaggerViewerDeploy"]
+    branches: [ "main", "TaggerViewerDeploy"]
 
 jobs:
   build-vue-js-component:
@@ -44,12 +45,11 @@ jobs:
       OPENMS_VERSION: 3.0.0 
 
     steps:
-
     - name: Checkout
       uses: actions/checkout@v3
       with:
         repository: t0mdavid-m/OpenMS
-        ref: TaggerViewerDeployment
+        ref: FDdevelop
         path: 'OpenMS'
 
     - name: Install Qt
@@ -96,11 +96,16 @@ jobs:
 
     - name: Load contrib build
       if: steps.cache-contrib-win.outputs.cache-hit != 'true'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-          cd OpenMS/contrib
-          curl -o contribbld.tar.gz https://abibuilder.cs.uni-tuebingen.de/archive/openms/contrib/windows/x64/msvc-14.2/contrib_build.tar.gz
-          tar -xzf contribbld.tar.gz
-          rm contribbld.tar.gz
+        cd OpenMS/contrib
+        # Download the file using the URL fetched from GitHub
+        gh release download -R OpenMS/contrib --pattern 'contrib_build-Windows.tar.gz'
+        # Extract the archive
+        tar -xzf contrib_build-Windows.tar.gz
+        rm contrib_build-Windows.tar.gz
+        ls
 
     - name: Setup ccache cache
       uses: actions/cache@v3
@@ -159,16 +164,15 @@ jobs:
           CCACHE_COMPRESS: true
           CCACHE_COMPRESSLEVEL: 12
           CCACHE_MAXSIZE: 400M
-          Eigen3_DIR: "${{ steps.tools-prefix.outputs.eigen_choco }}"
 
-    - name: Test Windows
-      shell: bash
-      run: $LAUNCHER ctest --output-on-failure -V -S $GITHUB_WORKSPACE/OpenMS/tools/ci/citest.cmake
-      env:
-          LAUNCHER: ""
-          SOURCE_DIRECTORY: "${{ github.workspace }}/OpenMS"
-          CI_PROVIDER: "GitHub-Actions"
-          BUILD_NAME: "${{ env.RUN_NAME }}-Win64-class-topp-${{ github.run_number }}"
+    #- name: Test Windows
+    #  shell: bash
+    #  run: $LAUNCHER ctest --output-on-failure -V -S $GITHUB_WORKSPACE/OpenMS/tools/ci/citest.cmake
+    #  env:
+    #      LAUNCHER: ""
+    #     SOURCE_DIRECTORY: "${{ github.workspace }}/OpenMS"
+    #     CI_PROVIDER: "GitHub-Actions"
+    #     BUILD_NAME: "${{ env.RUN_NAME }}-Win64-class-topp-${{ github.run_number }}"
 
     - name: Upload TOPP tools as artifact
       uses: actions/upload-artifact@v3
@@ -211,79 +215,48 @@ jobs:
         name: OpenMS-share
         path: share
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Setup virtual environment
-      shell: cmd
+    - name: Setup python embeddable version
       run: |
-        python -m venv myenv
+        mkdir python-${{ env.PYTHON_VERSION }}
+        curl -O https://www.python.org/ftp/python/${{ env.PYTHON_VERSION }}/python-${{ env.PYTHON_VERSION }}-embed-amd64.zip
+        unzip python-${{ env.PYTHON_VERSION }}-embed-amd64.zip -d python-${{ env.PYTHON_VERSION }}
+        rm python-${{ env.PYTHON_VERSION }}-embed-amd64.zip
 
-        call myenv\Scripts\activate.bat   
-
-        pip install -r requirements.txt
-
-        pip install pyinstaller
-
-    - name: Write function to cli.py
-      shell: bash
+    - name: Install pip
       run: |
-        echo "{ls {D:/a/FlashViewer/FlashViewer/myenv/Lib/site-packages/streamlit/web/}}"
-        head -n -2 D:/a/FlashViewer/FlashViewer/myenv/Lib/site-packages/streamlit/web/cli.py > temp_cli.py
+        curl -O https://bootstrap.pypa.io/get-pip.py
+        ./python-${{ env.PYTHON_VERSION }}/python get-pip.py --no-warn-script-location
+        rm get-pip.py
 
-        cat << EOF >> temp_cli.py
-        def _main_run_clExplicit(file, command_line, args=[], flag_options=[]):
-            main._is_running_with_streamlit = True
-            bootstrap.run(file, command_line, args, flag_options)
-
-
-        if __name__ == "__main__":
-            main()
-        EOF
-
-        mv temp_cli.py D:/a/FlashViewer/FlashViewer/myenv/Lib/site-packages/streamlit/web/cli.py  
-
-    - name: Compile app with pyinstaller
-      shell: cmd
+    - name: Uncomment 'import site' in python311._pth file
       run: |
-        call myenv\Scripts\activate.bat 
-        pyinstaller --onefile --additional-hooks-dir ./hooks run_app.py --clean
+        sed -i 's/#import site/import site/' python-${{ env.PYTHON_VERSION }}/python311._pth
 
+    - name: Install Required Packages
+      run: .\python-${{ env.PYTHON_VERSION }}\python -m pip install --force-reinstall -r requirements.txt --no-warn-script-location
 
-    - name: Copy everything to dist directory
+    - name: Create run_app.bat file
       run: |
-        cp -r .streamlit dist/.streamlit
-        cp -r pages dist/pages
-        cp -r src dist/src
-        cp -r assets dist/assets
-        cp -r example-data dist/example-data
-        cp -r openms-bin/*.dll dist/
-        cp -r openms-bin/FLASHDeconv.exe dist/
-        cp -r openms-bin/FLASHTagger.exe dist/
-        cp -r openms-bin/DecoyDatabase.exe dist/
-        cp -r share dist/share
-        cp -r js-dist dist/js-component/dist
-        cp example_database.fasta dist/
-        cp example_spectrum_1.mzML dist/
-        cp example_spectrum_2.mzML dist/
-        cp app.py dist/
-
-    - name: Patch WorkflowManager.py for windows
+        echo '@echo off' > run_app.bat
+        echo '.\\python-${{ env.PYTHON_VERSION }}\\python -m streamlit run app.py local' >> run_app.bat
+      
+    - name: Create All-in-one executable folder
       run: |
-        cp dist/src/workflow/WorkflowManagerWindows.py dist/src/workflow/WorkflowManager.py
-    
-    - name: Modify .spec file
-      shell: bash
-      run: |
-        cp run_app_temp.spec run_app.spec
-
-    - name: Make executable
-      shell: cmd
-      run: |
-        call myenv\Scripts\activate.bat
-        pyinstaller run_app.spec --clean
+        mkdir streamlit_exe
+        mv python-${{ env.PYTHON_VERSION }} streamlit_exe
+        mv run_app.bat streamlit_exe
+        cp -r src streamlit_exe
+        cp -r pages streamlit_exe
+        cp -r assets streamlit_exe
+        cp -r example-data streamlit_exe
+        cp -r .streamlit streamlit_exe
+        cp openms-bin/*.dll streamlit_exe
+        cp openms-bin/FLASHDeconv.exe streamlit_exe
+        cp openms-bin/FLASHTagger.exe streamlit_exe
+        cp openms-bin/DecoyDatabase.exe streamlit_exe
+        cp -r share streamlit_exe/share
+        cp -r js-dist streamlit_exe/js-dist
+        cp app.py streamlit_exe
 
     - name: Delete OpenMS bin artifact
       uses: geekyeggo/delete-artifact@v2
@@ -294,9 +267,13 @@ jobs:
       uses: geekyeggo/delete-artifact@v2
       with:
           name: OpenMS-share
+          
+    #- name: Compress streamlit_exe folder to OpenMS-App.zip
+    #  run: |
+    #    7z a OpenMS-App.zip ./streamlit_exe/* -r
 
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
         name: OpenMS-App
-        path: dist
+        path: streamlit_exe

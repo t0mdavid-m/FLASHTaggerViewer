@@ -499,8 +499,12 @@ class StreamlitUI:
     def input_TOPP(
         self,
         topp_tool_name: str,
-        num_cols: int = 3,
+        num_cols: int = 4,
         exclude_parameters: List[str] = [],
+        include_parameters: List[str] = [],
+        display_full_parameter_names: bool = False,
+        display_subsections: bool = False,
+        custom_defaults: dict = {},
     ) -> None:
         """
         Generates input widgets for TOPP tool parameters dynamically based on the tool's
@@ -510,103 +514,138 @@ class StreamlitUI:
         Args:
             topp_tool_name (str): The name of the TOPP tool for which to generate inputs.
             num_cols (int, optional): Number of columns to use for the layout. Defaults to 3.
-            exclude_parameters (List[str], optional): List of parameter names to exclude from the widget.
+            exclude_parameters (List[str], optional): List of parameter names to exclude from the widget. Defaults to an empty list.
+            include_parameters (List[str], optional): List of parameter names to include in the widget. Defaults to an empty list.
+            display_full_parameter_names (bool, optional): Whether to display the full parameter names. Defaults to False.
+            display_subsections (bool, optional): Whether to split parameters into subsections based on the prefix (disables display_full_parameter_names). Defaults to False.
+            custom_defaults (dict, optional): Dictionary of custom defaults to use. Defaults to an empty dict.
         """
         # write defaults ini files
         ini_file_path = Path(self.parameter_manager.ini_dir, f"{topp_tool_name}.ini")
         if not ini_file_path.exists():
             subprocess.call([topp_tool_name, "-write_ini", str(ini_file_path)])
+            # update custom defaults if necessary
+            if custom_defaults:
+                param = poms.Param()
+                poms.ParamXMLFile().load(str(ini_file_path), param)
+                for key, value in custom_defaults.items():
+                    encoded_key = f"{topp_tool_name}:1:{key}".encode()
+                    if encoded_key in param.keys():
+                        param.setValue(encoded_key, value)
+                poms.ParamXMLFile().store(str(ini_file_path), param)
+            
+
         # read into Param object
         param = poms.Param()
         poms.ParamXMLFile().load(str(ini_file_path), param)
-
-        excluded_keys = [
-            "log",
-            "debug",
-            #"threads",
-            "no_progress",
-            "force",
-            "version",
-            "test",
-        ] + exclude_parameters
-
-        param_dicts = []
-        for key in param.keys():
-            # Determine if the parameter should be included based on the conditions
-            if (
-                b"input file" in param.getTags(key)
-                or b"output file" in param.getTags(key)
-            ) or (key.decode().split(":")[-1] in excluded_keys):
-                continue
+        if include_parameters:
+            valid_keys = [key for key in param.keys() if any([k.encode() in key for k in include_parameters])]
+        else:
+            excluded_keys = [
+                "log",
+                "debug",
+                #"threads",
+                "no_progress",
+                "force",
+                "version",
+                "test",
+            ] + exclude_parameters
+            valid_keys = [key for key in param.keys() if not (b"input file" in param.getTags(key)
+                                                            or b"output file" in param.getTags(key)
+                                                            or any([k.encode() in key for k in excluded_keys]))]
+        params_decoded = []
+        for key in valid_keys:
             entry = param.getEntry(key)
-            param_dict = {
+            tmp = {
                 "name": entry.name.decode(),
                 "key": key,
                 "value": entry.value,
                 "valid_strings": [v.decode() for v in entry.valid_strings],
                 "description": entry.description.decode(),
                 "advanced": (b"advanced" in param.getTags(key)),
+                "section_description": param.getSectionDescription(':'.join(key.decode().split(':')[:-1]))
             }
-            param_dicts.append(param_dict)
-
-        # Update parameter values from the JSON parameters file
-        json_params = self.params
-        if topp_tool_name in json_params:
-            for p in param_dicts:
-                name = p["key"].decode().split(":1:")[1]
-                if name in json_params[topp_tool_name]:
-                    p["value"] = json_params[topp_tool_name][name]
-
-        # input widgets in n number of columns
-        cols = st.columns(num_cols)
-        i = 0
+            params_decoded.append(tmp)
+                    
+        # for each parameter in params_decoded
+        # if a parameter with custom default value exists, use that value
+        # else check if the parameter is already in self.params, if yes take the value from self.params
+        for p in params_decoded:
+            name = p["key"].decode().split(":1:")[1]
+            if topp_tool_name in self.params:
+                if name in self.params[topp_tool_name]:
+                    p["value"] = self.params[topp_tool_name][name]
+                elif name in custom_defaults:
+                    p["value"] = custom_defaults[name]
+            elif name in custom_defaults:
+                p["value"] = custom_defaults[name]
 
         # show input widgets
-        for p in param_dicts:
+        section_description = None
+        cols = st.columns(num_cols)
+        i = 0
+        
+        for p in params_decoded:
 
             # skip avdanced parameters if not selected
             if not st.session_state["advanced"] and p["advanced"]:
                 continue
 
             key = f"{self.parameter_manager.topp_param_prefix}{p['key'].decode()}"
-
+            if display_subsections:
+                 name = p["name"]
+                 if section_description is None:
+                    section_description = p['section_description']
+                    
+                 elif section_description != p['section_description']:
+                    section_description = p['section_description']
+                    st.markdown(f"**{section_description}**")
+                    cols = st.columns(num_cols)
+                    i = 0
+            elif display_full_parameter_names:
+                name = key.split(":1:")[1].replace("algorithm:", "").replace(":", " : ")
+            else:
+                name = p["name"]
             try:
+                # # sometimes strings with newline, handle as list
+                if isinstance(p["value"], str) and "\n" in p["value"]:
+                    p["value"] = p["value"].split("\n")
                 # bools
-                if p["value"] == "true" or p["value"] == "false":
+                if isinstance(p["value"], bool):
                     cols[i].markdown("##")
                     cols[i].checkbox(
-                        p["name"],
-                        value=(p["value"] == "true"),
-                        help=p["description"],
-                        key=key,
-                    )
-
-                # string options
-                elif isinstance(p["value"], str) and p["valid_strings"]:
-                    cols[i].selectbox(
-                        p["name"],
-                        options=p["valid_strings"],
-                        index=p["valid_strings"].index(p["value"]),
+                        name,
+                        value=(p["value"] == "true") if type(p["value"]) == str else p["value"],
                         help=p["description"],
                         key=key,
                     )
 
                 # strings
                 elif isinstance(p["value"], str):
-                    cols[i].text_input(
-                        p["name"], value=p["value"], help=p["description"], key=key
-                    )
+                    # string options
+                    if p["valid_strings"]:
+                        cols[i].selectbox(
+                            name,
+                            options=p["valid_strings"],
+                            index=p["valid_strings"].index(p["value"]),
+                            help=p["description"],
+                            key=key,
+                        )
+                    else:
+                        cols[i].text_input(
+                            name, value=p["value"], help=p["description"], key=key
+                        )
 
                 # ints
                 elif isinstance(p["value"], int):
                     cols[i].number_input(
-                        p["name"], value=int(p["value"]), help=p["description"], key=key
+                        name, value=int(p["value"]), help=p["description"], key=key
                     )
 
                 # floats
                 elif isinstance(p["value"], float):
                     cols[i].number_input(
-                        p["name"],
+                        name,
                         value=float(p["value"]),
                         step=1.0,
                         help=p["description"],
@@ -619,20 +658,21 @@ class StreamlitUI:
                         v.decode() if isinstance(v, bytes) else v for v in p["value"]
                     ]
                     cols[i].text_area(
-                        p["name"],
-                        value="\n".join([str(aaa) for aaa in p["value"]]),
+                        name,
+                        value="\n".join([str(val) for val in p["value"]]),
                         help=p["description"],
                         key=key,
                     )
-
 
                 # increment number of columns, create new cols object if end of line is reached
                 i += 1
                 if i == num_cols:
                     i = 0
                     cols = st.columns(num_cols)
-            except:
+            except Exception as e:
                 cols[i].error(f"Error in parameter **{p['name']}**.")
+                print("Error parsing \""+ p['name'] + "\": " + str(e))
+
 
     def input_python(
         self,

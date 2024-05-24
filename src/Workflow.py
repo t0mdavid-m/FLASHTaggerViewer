@@ -1,13 +1,13 @@
 import streamlit as st
+import time
 from .workflow.WorkflowManager import WorkflowManager
-from pages.FileUploadTagger import handleInputFiles
-from pages.FileUploadTagger import parseUploadedFiles
-from pages.FileUploadTagger import initializeWorkspace, showUploadedFilesTable
-from zipfile import ZipFile, ZIP_DEFLATED
+from pages.FileUploadTagger import postprocessingAfterUpload_Tagger
+from pages.FileUpload import postprocessingAfterUpload_FD
 
 from os.path import join, splitext, basename, exists, dirname
 from os import makedirs
 from shutil import copyfile, rmtree
+from pathlib import Path
 
 class Workflow(WorkflowManager):
     # Setup pages for upload, parameter, execution and results.
@@ -99,17 +99,26 @@ class TagWorkflow(WorkflowManager):
     def upload(self)-> None:
         t = st.tabs(["MS data", "Database"])
         with t[0]:
+            example_data = ['example-data/flashtagger/example_spectrum_%d.mzML' % n for n in [1, 2]]
             # Use the upload method from StreamlitUI to handle mzML file uploads.
-            self.ui.upload_widget(key="mzML-files", name="MS data", file_type="mzML", fallback=['example_spectrum_1.mzML', 'example_spectrum_2.mzML'])
+            self.ui.upload_widget(key="mzML-files", name="MS data", file_type="mzML", fallback=example_data)
         with t[1]:
             # Example with fallback data (not used in workflow)
-            self.ui.upload_widget(key="fasta-file", name="Database", file_type="fasta", enable_directory=False, fallback='example_database.fasta')
+            self.ui.upload_widget(key="fasta-file", name="Database", file_type="fasta", enable_directory=False,
+                                  fallback='example-data/flashtagger/example_database.fasta')
 
 
     def configure(self) -> None:
         # Allow users to select mzML files for the analysis.
         self.ui.select_input_file("mzML-files", multiple=True)
         self.ui.select_input_file("fasta-file", multiple=False)
+
+        self.ui.input_widget(
+            'generate_decoys', name='Use target-decoy approach?', widget_type='checkbox', default=True
+        )
+        self.ui.input_widget(
+            'few_proteins', name='Do you expect <100 Proteins?', widget_type='checkbox', default=False
+        )
 
         # Create tabs for different analysis steps.
         t = st.tabs(
@@ -124,7 +133,8 @@ class TagWorkflow(WorkflowManager):
                     'flanking_mass_tol', 'max_iso_error_count', 
                     'min_matched_aa', 'fdr', 'keep_decoy', 'ida_log',
                     'write_detail', 'report_FDR', 'quant_method'
-                ]
+                ],
+                display_subsections=True
             )
         with t[1]:
             # Parameters for FeatureFinderMetabo TOPP tool.
@@ -135,7 +145,8 @@ class TagWorkflow(WorkflowManager):
                     'use_RNA_averagine', 'tol', 'min_mass', 'max_mass',
                     'min_charge', 'max_charge', 'precursor_charge',
                     'precursor_mz', 'min_cos', 'min_snr'
-                ]
+                ],
+                display_subsections=True
             )
 
     def pp(self) -> None:
@@ -152,12 +163,13 @@ class TagWorkflow(WorkflowManager):
         uploaded_files = []
         for in_mzML in in_mzMLs:
             current_base = splitext(basename(in_mzML))[0]
+            current_time = time.strftime("%Y%m%d-%H%M%S")
 
             #out_db = join(base_path, 'db-fasta', f'{current_base}_db.fasta')
-            out_anno = join(base_path, 'anno-mzMLs', f'{current_base}_annotated.mzML')
-            out_deconv = join(base_path, 'deconv-mzMLs', f'{current_base}_deconv.mzML')
-            out_tag = join(base_path, 'tags-tsv', f'{current_base}_tagged.tsv')
-            out_protein = join(base_path, 'proteins-tsv', f'{current_base}_protein.tsv')
+            out_anno = join(base_path, 'anno-mzMLs', f'{current_base}_{current_time}_annotated.mzML')
+            out_deconv = join(base_path, 'deconv-mzMLs', f'{current_base}_{current_time}_deconv.mzML')
+            out_tag = join(base_path, 'tags-tsv', f'{current_base}_{current_time}_tagged.tsv')
+            out_protein = join(base_path, 'proteins-tsv', f'{current_base}_{current_time}_protein.tsv')
 
             if not exists(out_tag):
                 continue
@@ -170,13 +182,7 @@ class TagWorkflow(WorkflowManager):
 
 
         # make directory to store deconv and anno mzML files & initialize data storage
-        input_types = ["deconv-mzMLs", "anno-mzMLs", "tags-tsv", "proteins-tsv"]
-        parsed_df_types = ["deconv_dfs", "anno_dfs", "tag_dfs", "protein_dfs"]
-        initializeWorkspace(input_types, parsed_df_types)
-        handleInputFiles(uploaded_files)
-        parseUploadedFiles(reparse=True)
-        showUploadedFilesTable()
-
+        postprocessingAfterUpload_Tagger(uploaded_files)
 
 
     
@@ -218,30 +224,43 @@ class TagWorkflow(WorkflowManager):
         uploaded_files = []
         for in_mzML in in_mzMLs:
             current_base = splitext(basename(in_mzML))[0]
+            current_time = time.strftime("%Y%m%d-%H%M%S")
 
-
-            out_db = join(base_path, 'db-fasta', f'{current_base}_db.fasta')
-            out_anno = join(base_path, 'anno-mzMLs', f'{current_base}_annotated.mzML')
-            out_deconv = join(base_path, 'deconv-mzMLs', f'{current_base}_deconv.mzML')
-            out_tag = join(base_path, 'tags-tsv', f'{current_base}_tagged.tsv')
-            out_protein = join(base_path, 'proteins-tsv', f'{current_base}_protein.tsv')
+            out_db = join(base_path, 'db-fasta', f'{current_base}_{current_time}_db.fasta')
+            out_anno = join(base_path, 'anno-mzMLs', f'{current_base}_{current_time}_annotated.mzML')
+            out_deconv = join(base_path, 'deconv-mzMLs', f'{current_base}_{current_time}_deconv.mzML')
+            out_tag = join(base_path, 'tags-tsv', f'{current_base}_{current_time}_tagged.tsv')
+            out_protein = join(base_path, 'proteins-tsv', f'{current_base}_{current_time}_protein.tsv')
             #decoy_db = join(temp_path, f'{current_base}_db.fasta')
 
-            # self.executor.run_topp(
-            #     'DecoyDatabase',
-            #     {
-            #         'in' : [database[0]],
-            #         'out' : [out_db],
-            #     },
-            #     params_manual = {
-            #         'method' : 'shuffle',
-            #         'shuffle_decoy_ratio' : 100,
-            #         'enzyme' : 'no cleavage',
-            #     }
-            # )
-            copyfile(database[0], out_db)
+            # Get folder name
+            folder_path = join(base_path, 'FLASHTaggerOutput', '%s_%s'%(current_base, current_time))
 
-            # TODO: Parallelize
+            if exists(folder_path):
+                rmtree(folder_path)
+            makedirs(folder_path)
+
+            
+            if self.executor.parameter_manager.get_parameters_from_json()['generate_decoys']:
+                if self.executor.parameter_manager.get_parameters_from_json()['few_proteins']:
+                    ratio = 100
+                else:
+                    ratio = 1
+                self.executor.run_topp(
+                    'DecoyDatabase',
+                    {
+                        'in' : [database[0]],
+                        'out' : [out_db],
+                    },
+                    params_manual = {
+                        'method' : 'shuffle',
+                        'shuffle_decoy_ratio' : ratio,
+                        'enzyme' : 'no cleavage',
+                    }
+                )
+            else:
+                copyfile(database[0], out_db)
+
             self.executor.run_topp(
                 'FLASHDeconv',
                 input_output={
@@ -267,6 +286,12 @@ class TagWorkflow(WorkflowManager):
             uploaded_files.append(out_deconv)
             uploaded_files.append(out_tag)
             uploaded_files.append(out_protein)
+
+            copyfile(out_db, join(folder_path, 'database.fasta'))
+            copyfile(out_anno, join(folder_path, 'annotated.mzML'))
+            copyfile(out_deconv, join(folder_path, 'out.mzML'))
+            copyfile(out_tag, join(folder_path, 'tags.tsv'))
+            copyfile(out_protein, join(folder_path, 'proteins.tsv'))
 
 
         # make directory to store deconv and anno mzML files & initialize data storage
@@ -317,7 +342,8 @@ class DeconvWorkflow(WorkflowManager):
 
     def upload(self)-> None:
         # Use the upload method from StreamlitUI to handle mzML file uploads.
-        self.ui.upload_widget(key="mzML-files", name="MS data", file_type="mzML", fallback=['example_spectrum_1.mzML', 'example_spectrum_2.mzML'])
+        self.ui.upload_widget(key="mzML-files", name="MS data", file_type="mzML",
+                              fallback=['example-data/flashdeconv/example_fd.mzML'])
 
     def configure(self) -> None:
         # Allow users to select mzML files for the analysis.
@@ -327,9 +353,43 @@ class DeconvWorkflow(WorkflowManager):
             'FLASHDeconv',
             exclude_parameters = [
                 'ida_log'
-            ]
+            ],
+            display_subsections=True
         )
-    
+
+
+    def pp(self) -> None:
+        st.session_state['progress_bar_space'] = st.container()
+
+        try:
+            in_mzMLs = self.file_manager.get_files(self.params["mzML-files"])
+        except:
+            st.error('Please select at least one mzML file.')
+            return
+
+        base_path = dirname(self.workflow_dir)
+
+        uploaded_files = []
+        for in_mzML in in_mzMLs:
+            current_base = splitext(basename(in_mzML))[0]
+            current_time = time.strftime("%Y%m%d-%H%M%S")
+
+            out_anno = Path(join(base_path, 'anno-mzMLs', f'{current_base}_{current_time}_annotated.mzML'))
+            out_deconv = Path(join(base_path, 'deconv-mzMLs', f'{current_base}_{current_time}_deconv.mzML'))
+
+            uploaded_files.append(out_anno)
+            uploaded_files.append(out_deconv)
+            
+            if  'deconv-mzMLs' not in st.session_state:
+                st.session_state['deconv-mzMLs'] = []
+            if  'anno-mzMLs' not in st.session_state:
+                st.session_state['anno-mzMLs'] = []
+            st.session_state['deconv-mzMLs'].append(out_deconv.name)
+            st.session_state['anno-mzMLs'].append(out_anno.name)
+
+        # make directory to store deconv and anno mzML files & initialize data storage
+        postprocessingAfterUpload_FD(uploaded_files)
+
     def execution(self) -> None:
         # Get mzML input files from self.params.
         # Can be done without file manager, however, it ensures everything is correct.
@@ -347,11 +407,18 @@ class DeconvWorkflow(WorkflowManager):
         for in_mzML in in_mzMLs:
             # Get folder name
             file_name = splitext(basename(in_mzML))[0]
-            folder_path = join(base_path, 'FLASHDeconvOutput', file_name)
+            current_time = time.strftime("%Y%m%d-%H%M%S")
+            folder_path = join(base_path, 'FLASHDeconvOutput', '%s_%s'%(file_name, current_time))
+            folder_path_anno = join(base_path, 'anno-mzMLs')
+            folder_path_deconv = join(base_path, 'deconv-mzMLs')
 
             if exists(folder_path):
                 rmtree(folder_path)
             makedirs(folder_path)
+            if not exists(folder_path_anno):
+                makedirs(folder_path_anno)
+            if not exists(folder_path_deconv):
+                makedirs(folder_path_deconv)
             
             out_tsv = join(folder_path, f'out.tsv')
             out_spec1 = join(folder_path, f'spec1.tsv')
@@ -359,8 +426,10 @@ class DeconvWorkflow(WorkflowManager):
             out_spec3 = join(folder_path, f'spec3.tsv')
             out_spec4 = join(folder_path, f'spec4.tsv')
             out_mzml = join(folder_path, f'out.mzML')
+            out_deconv_mzml_viewer = join(folder_path_deconv, f'{file_name}_{current_time}_deconv.mzML')
             out_quant = join(folder_path, f'quant.tsv')
             out_annotated_mzml = join(folder_path, f'annotated.mzML')
+            out_annotated_mzml_viewer = join(folder_path_anno, f'{file_name}_{current_time}_annotated.mzML')
             out_msalign1 = join(folder_path, f'msalign1.msalign')
             out_msalign2 = join(folder_path, f'msalign2.msalign')
             out_feature1 = join(folder_path, f'feature1.feature')
@@ -389,3 +458,6 @@ class DeconvWorkflow(WorkflowManager):
                     'out_feature2' : [out_feature2],
                 }
             )
+
+            copyfile(out_mzml, out_deconv_mzml_viewer)
+            copyfile(out_annotated_mzml, out_annotated_mzml_viewer)
