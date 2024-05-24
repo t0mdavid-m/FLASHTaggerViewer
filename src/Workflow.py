@@ -129,10 +129,11 @@ class TagWorkflow(WorkflowManager):
             self.ui.input_TOPP(
                 'FLASHDeconv',
                 exclude_parameters = [
-                    'max_tag_count', 'min_length', 'max_length', 
-                    'flanking_mass_tol', 'max_iso_error_count', 
-                    'min_matched_aa', 'fdr', 'keep_decoy', 'ida_log',
-                    'write_detail', 'report_FDR', 'quant_method'
+                    'ida_log',
+                    'write_detail', 'report_FDR', 'quant_method',
+                    'mass_error_ppm', 'min_sample_rate', 'min_trace_length',
+                    'max_trace_length', 'min_cos', 'type', 'isotope_correction',
+                    'reporter_mz_tol', 'only_fully_quantified'
                 ],
                 display_subsections=True
             )
