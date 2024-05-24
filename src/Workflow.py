@@ -114,10 +114,8 @@ class TagWorkflow(WorkflowManager):
         self.ui.select_input_file("fasta-file", multiple=False)
 
         self.ui.input_widget(
-            'generate_decoys', name='Use target-decoy approach?', widget_type='checkbox', default=True
-        )
-        self.ui.input_widget(
-            'few_proteins', name='Do you expect <100 Proteins?', widget_type='checkbox', default=False
+            'few_proteins', name='Do you expect <100 Proteins?', widget_type='checkbox', default=True,
+            help='If set, the decoy database will be 100 times larger than the target database for better FDR estimation resolution. This increases the runtime significantly.'
         )
 
         # Create tabs for different analysis steps.
@@ -241,8 +239,8 @@ class TagWorkflow(WorkflowManager):
                 rmtree(folder_path)
             makedirs(folder_path)
 
-            
-            if self.executor.parameter_manager.get_parameters_from_json()['generate_decoys']:
+            tagger_params = self.executor.parameter_manager.get_parameters_from_json()['FLASHTagger']
+            if ('Tagger:fdr' in tagger_params) and (tagger_params['Tagger:fdr'] < 1):
                 if self.executor.parameter_manager.get_parameters_from_json()['few_proteins']:
                     ratio = 100
                 else:
