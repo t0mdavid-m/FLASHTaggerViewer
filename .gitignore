@@ -23,7 +23,6 @@ Pipfile
 *.sw*
 
 **/__pycache__
-openms-streamlit-vue-component/
 
 
 workspaces-flashtaggerviewer
