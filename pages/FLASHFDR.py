@@ -21,7 +21,7 @@ def generate_and_display_ecdf_plot(df):
     x_decoy, y_decoy = ecdf(decoy_qscores)
     plt.plot(x_target, y_target, marker='.', linestyle='none', color='green', label='Target QScores')
     plt.plot(x_decoy, y_decoy, marker='.', linestyle='none', color='red', label='Decoy QScores')
-    plt.xlabel('QScore')
+    plt.xlabel('qScore')
     plt.ylabel('ECDF')
     plt.title('ECDF of QScore Distribution')
     plt.legend()

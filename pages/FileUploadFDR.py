@@ -38,7 +38,7 @@ def parseUploadedFiles():
 def load_example_data():
     example_files = ['FDR_deconv.tsv']
     for example_file in example_files:
-        source_path = Path("example-data", example_file)
+        source_path = Path("example-data", 'flashdeconv', example_file)
         dest_path = Path(st.session_state.workspace, "tsv-files", example_file)
         if not dest_path.exists():
             shutil.copy(source_path, dest_path)
