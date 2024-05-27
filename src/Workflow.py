@@ -139,12 +139,12 @@ class TagWorkflow(WorkflowManager):
             # Parameters for FeatureFinderMetabo TOPP tool.
             self.ui.input_TOPP(
                 'FLASHTagger', 
-                exclude_parameters = [
-                    'min_mz', 'max_mz', 'min_rt', 'max_rt', 'max_ms_level',
-                    'use_RNA_averagine', 'tol', 'min_mass', 'max_mass',
-                    'min_charge', 'max_charge', 'precursor_charge',
-                    'precursor_mz', 'min_cos', 'min_snr'
-                ],
+                #exclude_parameters = [
+                #    'min_mz', 'max_mz', 'min_rt', 'max_rt', 'max_ms_level',
+                #    'use_RNA_averagine', 'tol', 'min_mass', 'max_mass',
+                #    'min_charge', 'max_charge', 'precursor_charge',
+                #    'precursor_mz', 'min_cos', 'min_snr'
+                #],
                 display_subsections=True
             )
 
