@@ -194,7 +194,6 @@ def content():
     parseUploadedFiles()
     showUploadedFilesTable()
 
-
     ### if no input file is given, show blank page
     if "experiment-df" not in st.session_state:
         st.error('No results to show yet. Please run a workflow first!')
@@ -204,8 +203,8 @@ def content():
     experiment_df = st.session_state["experiment-df"]
 
     ### for only single experiment on one view
-    st.selectbox("choose experiment", experiment_df['Experiment Name'], key="selected_experiment0")
-    selected_exp0 = experiment_df[experiment_df['Experiment Name'] == st.session_state.selected_experiment0]
+    st.selectbox("choose experiment", experiment_df['Experiment Name'], key="selected_experiment0_tagger")
+    selected_exp0 = experiment_df[experiment_df['Experiment Name'] == st.session_state.selected_experiment0_tagger]
     layout_info = DEFAULT_LAYOUT
     if "saved_layout_setting_tagger" in st.session_state:  # when layout manager was used
         layout_info = st.session_state["saved_layout_setting_tagger"][0]
@@ -220,14 +219,14 @@ def content():
 
             st.divider() # horizontal line
             st.selectbox("choose experiment", experiment_df['Experiment Name'],
-                         key="selected_experiment%d"%exp_index,
+                         key="selected_experiment%d_tagger"%exp_index,
                          index=exp_index if exp_index<len(experiment_df) else 0)
             # if #experiment input files are less than #layouts, all the pre-selection will be the first experiment
 
             selected_exp = experiment_df[
-                experiment_df['Experiment Name'] == st.session_state["selected_experiment%d"%exp_index]]
+                experiment_df['Experiment Name'] == st.session_state["selected_experiment%d_tagger"%exp_index]]
             layout_info = st.session_state["saved_layout_setting_tagger"][exp_index]
-            print(layout_info)
+
             with st.spinner('Loading component...'):
                 sendDataToJS(selected_exp, layout_info, 'flash_viewer_grid_%d' % exp_index)
 
