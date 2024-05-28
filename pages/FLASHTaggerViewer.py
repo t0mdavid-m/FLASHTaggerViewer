@@ -202,12 +202,12 @@ def content():
     showUploadedFilesTable()
 
     ### if no input file is given, show blank page
-    if "experiment-df" not in st.session_state:
+    if "experiment-df-tagger" not in st.session_state:
         st.error('No results to show yet. Please run a workflow first!')
         return
 
     # input experiment file names (for select-box later)
-    experiment_df = st.session_state["experiment-df"]
+    experiment_df = st.session_state["experiment-df-tagger"]
 
     # Map names to index
     name_to_index = {n : i for i, n in enumerate(experiment_df['Experiment Name'])}

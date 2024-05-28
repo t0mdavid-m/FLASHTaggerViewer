@@ -10,6 +10,7 @@ from src.common import page_setup, v_space, save_params, reset_directory
 
 input_file_types = ["deconv-mzMLs", "anno-mzMLs"]
 parsed_df_types = ["deconv_dfs", "anno_dfs"]
+tool = 'FLASHDeconvViewer'
 
 
 def initializeWorkspace(input_file_types_: list, parsed_df_types_: list) -> None:
@@ -18,12 +19,12 @@ def initializeWorkspace(input_file_types_: list, parsed_df_types_: list) -> None
     parameter is needed: this method is used in FLASHQuant
     """
     for dirname in input_file_types_:
-        Path(st.session_state.workspace, dirname).mkdir(parents=True, exist_ok=True)
+        Path(st.session_state.workspace, tool, dirname).mkdir(parents=True, exist_ok=True)
         if dirname not in st.session_state:
             # initialization
             st.session_state[dirname] = []
         # sync session state and default-workspace
-        st.session_state[dirname] = os.listdir(Path(st.session_state.workspace, dirname))
+        st.session_state[dirname] = os.listdir(Path(st.session_state.workspace, tool, dirname))
 
     # initializing session state for storing data
     for df_type in parsed_df_types_:
@@ -60,7 +61,7 @@ def remove_selected_mzML_files(to_remove: list[str], params: dict) -> dict:
     """
     for input_type, df_type, file_postfix in zip(input_file_types, parsed_df_types,
                                                  ['_deconv.mzML', '_annotated.mzML']):
-        mzml_dir = Path(st.session_state["workspace"], input_type)
+        mzml_dir = Path(st.session_state.workspace, tool, input_type)
         # remove all given files from mzML workspace directory and selected files
         for exp_name in to_remove:
             file_name = exp_name + file_postfix
@@ -92,7 +93,7 @@ def handleInputFiles(uploaded_files):
             session_name = 'anno-mzMLs'
         if file.name not in st.session_state[session_name]:
             with open(
-                    Path(st.session_state.workspace, session_name, file.name), "wb"
+                    Path(st.session_state.workspace, tool, session_name, file.name), "wb"
             ) as f:
                 f.write(file.getbuffer())
             st.session_state[session_name].append(file.name)
@@ -130,8 +131,8 @@ def parseUploadedFiles():
 
             with st.spinner('Parsing the experiment %s...' % exp_name):
                 spec_df, anno_df, tolerance, massoffset, chargemass = parseFLASHDeconvOutput(
-                    Path(st.session_state["workspace"], "anno-mzMLs", anno_f),
-                    Path(st.session_state["workspace"], "deconv-mzMLs", deconv_f)
+                    Path(st.session_state.workspace, tool, "anno-mzMLs", anno_f),
+                    Path(st.session_state.workspace, tool, "deconv-mzMLs", deconv_f)
                 )
                 st.session_state['anno_dfs'][anno_f] = anno_df
                 st.session_state['deconv_dfs'][deconv_f] = spec_df
@@ -193,7 +194,7 @@ if __name__ == '__main__':
                                                                 input_file_types):
                 for file in Path("example-data/flashdeconv").glob(filename_postfix):
                     if file.name not in st.session_state[input_file_session_name]:
-                        shutil.copy(file, Path(st.session_state["workspace"], input_file_session_name, file.name))
+                        shutil.copy(file, Path(st.session_state.workspace, tool, input_file_session_name, file.name))
                         st.session_state[input_file_session_name].append(file.name)
             # parsing the example files is done in parseUploadedFiles later
             st.success("Example mzML files loaded!")
@@ -262,7 +263,7 @@ if __name__ == '__main__':
             if c1.button("⚠️ Remove **all**", disabled=not any(st.session_state["experiment-df"])):
                 for file_option, df_option in zip(input_file_types, parsed_df_types):
                     if file_option in st.session_state:
-                        reset_directory(Path(st.session_state.workspace, file_option))
+                        reset_directory(Path(st.session_state.workspace, tool, file_option))
                         st.session_state[file_option] = []
                     if df_option in st.session_state:
                         st.session_state[df_option] = {}
