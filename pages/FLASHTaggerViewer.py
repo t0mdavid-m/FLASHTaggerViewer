@@ -183,6 +183,15 @@ def setSequenceViewInDefaultView():
         global DEFAULT_LAYOUT
         DEFAULT_LAYOUT = DEFAULT_LAYOUT + [['sequence_view']] + [['internal_fragment_map']]
 
+def select_experiment():
+    st.session_state.selected_experiment0_tagger = st.session_state.selected_experiment_dropdown_tagger
+    if "saved_layout_setting_tagger" in st.session_state and len(st.session_state["saved_layout_setting_tagger"]) > 1:
+        for exp_index in range(len(st.session_state["saved_layout_setting_tagger"])):
+            if exp_index == 0:
+                continue
+            st.session_state[f"selected_experiment{exp_index}_tagger"] = st.session_state[f'selected_experiment_dropdown_{exp_index}_tagger']
+
+
 
 def content():
     page_setup("TaggerViewer")
@@ -202,14 +211,30 @@ def content():
     # input experiment file names (for select-box later)
     experiment_df = st.session_state["experiment-df"]
 
+    # Map names to index
+    name_to_index = {n : i for i, n in enumerate(experiment_df['Experiment Name'])}
+
+
     ### for only single experiment on one view
-    st.selectbox("choose experiment", experiment_df['Experiment Name'], key="selected_experiment0_tagger")
-    selected_exp0 = experiment_df[experiment_df['Experiment Name'] == st.session_state.selected_experiment0_tagger]
-    layout_info = DEFAULT_LAYOUT
-    if "saved_layout_setting_tagger" in st.session_state:  # when layout manager was used
-        layout_info = st.session_state["saved_layout_setting_tagger"][0]
-    with st.spinner('Loading component...'):
-        sendDataToJS(selected_exp0, layout_info)
+    col1, col2 =  st.columns([0.9, 0.1])
+    with col1:
+        st.selectbox(
+            "choose experiment", experiment_df['Experiment Name'], 
+            key="selected_experiment_dropdown_tagger", 
+            index=name_to_index[st.session_state.selected_experiment0_tagger] if 'selected_experiment0_tagger' in st.session_state else None
+        )
+    with col2:
+        st.text('')
+        st.text('')
+        st.button('apply', on_click=select_experiment)
+
+    if 'selected_experiment0_tagger' in st.session_state:
+        selected_exp0 = experiment_df[experiment_df['Experiment Name'] == st.session_state.selected_experiment0_tagger]
+        layout_info = DEFAULT_LAYOUT
+        if "saved_layout_setting_tagger" in st.session_state:  # when layout manager was used
+            layout_info = st.session_state["saved_layout_setting_tagger"][0]
+        with st.spinner('Loading component...'):
+            sendDataToJS(selected_exp0, layout_info)
 
     ### for multiple experiments on one view
     if "saved_layout_setting_tagger" in st.session_state and len(st.session_state["saved_layout_setting_tagger"]) > 1:
@@ -218,17 +243,28 @@ def content():
             if exp_index == 0: continue  # skip the first experiment
 
             st.divider() # horizontal line
-            st.selectbox("choose experiment", experiment_df['Experiment Name'],
-                         key="selected_experiment%d_tagger"%exp_index,
-                         index=exp_index if exp_index<len(experiment_df) else 0)
+
+            col1, col2 =  st.columns([0.9, 0.1])
+            with col1:
+                st.selectbox(
+                    "choose experiment", experiment_df['Experiment Name'], 
+                    key=f'selected_experiment_dropdown_{exp_index}_tagger',
+                    index = name_to_index[st.session_state[f'selected_experiment{exp_index}_tagger']] if f'selected_experiment{exp_index}_tagger' in st.session_state else None
+                )
+            with col2:
+                st.text('')
+                st.text('')
+                st.button('apply', on_click=select_experiment, key=f'button_{exp_index}' if exp_index < len(experiment_df) else 0)
+
+
             # if #experiment input files are less than #layouts, all the pre-selection will be the first experiment
+            if f"selected_experiment{exp_index}_tagger" in st.session_state:
+                selected_exp = experiment_df[
+                    experiment_df['Experiment Name'] == st.session_state["selected_experiment%d_tagger"%exp_index]]
+                layout_info = st.session_state["saved_layout_setting_tagger"][exp_index]
 
-            selected_exp = experiment_df[
-                experiment_df['Experiment Name'] == st.session_state["selected_experiment%d_tagger"%exp_index]]
-            layout_info = st.session_state["saved_layout_setting_tagger"][exp_index]
-
-            with st.spinner('Loading component...'):
-                sendDataToJS(selected_exp, layout_info, 'flash_viewer_grid_%d' % exp_index)
+                with st.spinner('Loading component...'):
+                    sendDataToJS(selected_exp, layout_info, 'flash_viewer_grid_%d' % exp_index)
 
 
     # selected_tags = selected_exp0.iloc[0]['Tag Files']
