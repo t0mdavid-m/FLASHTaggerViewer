@@ -15,6 +15,12 @@ H20 = 18.010564683
 NH3 = 17.0265491015
 
 
+def remove_ambigious(protein : AASequence):
+    return AASequence.fromString(
+        protein.toUniModString().replace('X', '').replace('x', '')
+    )
+
+
 # NOTE: cannot cache this function: cannot hash "OpenMS.AASequence"
 def getFragmentMassesWithSeq(protein, res_type):
     protein_length = protein.size()
@@ -35,12 +41,12 @@ def getFragmentMassesWithSeq(protein, res_type):
 
     # process prefix
     for aa_index in range(protein_length):
-        prefix_mass = protein.getPrefix(aa_index+1).getMonoWeight(prefix_ion_type, 0)  # + added_ptm_masses
+        prefix_mass = remove_ambigious(protein.getPrefix(aa_index+1)).getMonoWeight(prefix_ion_type, 0)  # + added_ptm_masses
         prefix_mass_list[aa_index] = prefix_mass
 
     # process suffix
     for aa_index in reversed(range(protein_length)):
-        suffix_mass = protein.getSuffix(aa_index+1).getMonoWeight(suffix_ion_type, 0)  # + added_ptm_masses
+        suffix_mass = remove_ambigious(protein.getSuffix(aa_index+1)).getMonoWeight(suffix_ion_type, 0)  # + added_ptm_masses
         suffix_mass_list[aa_index] = suffix_mass
 
     return prefix_mass_list, suffix_mass_list
@@ -81,7 +87,7 @@ def getFragmentDataFromSeq(sequence, coverage=None, maxCoverage=None):
     protein, fixed_mods = setFixedModification(protein)  # handling fixed modifications
 
     # calculating proteoform mass from sequence
-    protein_mass = protein.getMonoWeight()
+    protein_mass = remove_ambigious(protein).getMonoWeight()
 
     out_object = {'sequence': list(sequence),
                   'theoretical_mass': protein_mass, 
@@ -121,7 +127,8 @@ aa_masses = {
     'T': 101.047679,
     'W': 186.079313,
     'Y': 163.063329,
-    'V': 99.068414
+    'V': 99.068414,
+    'X' : 0
 }
 
 def calculate_exact_mass(sequence, shift):

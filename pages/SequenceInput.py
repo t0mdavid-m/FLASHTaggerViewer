@@ -21,7 +21,7 @@ def validateSequenceInput(input_seq):
     seq = ''.join(input_seq.split())
     if not seq: return False
 
-    pattern = re.compile("^[ac-ik-wyAC-IK-WY]+$")  # only alphabet except for BJXZ
+    pattern = re.compile("^[ac-ik-wyAC-IK-WYXx]+$")  # only alphabet except for BJXZ
     if not pattern.match(seq):
         return False
     return True
