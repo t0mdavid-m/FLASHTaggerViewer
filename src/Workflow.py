@@ -149,6 +149,14 @@ class TagWorkflow(WorkflowManager):
             )
 
     def pp(self) -> None:
+
+        if 'selected_experiment0_tagger' in st.session_state:
+            del(st.session_state['selected_experiment0_tagger'])
+        if "saved_layout_setting_tagger" in st.session_state and len(st.session_state["saved_layout_setting_tagger"]) > 1:
+            for exp_index in range(1, len(st.session_state["saved_layout_setting_tagger"])):
+                if f"selected_experiment{exp_index}_tagger" in st.session_state:
+                    del(st.session_state[f"selected_experiment{exp_index}_tagger"])
+
         st.session_state['progress_bar_space'] = st.container()
         
         try:
@@ -358,6 +366,14 @@ class DeconvWorkflow(WorkflowManager):
 
 
     def pp(self) -> None:
+
+        if 'selected_experiment0' in st.session_state:
+            del(st.session_state['selected_experiment0'])
+        if "saved_layout_setting" in st.session_state and len(st.session_state["saved_layout_setting"]) > 1:
+            for exp_index in range(1, len(st.session_state["saved_layout_setting"])):
+                if f"selected_experiment{exp_index}" in st.session_state:
+                    del(st.session_state[f"selected_experiment{exp_index}"])
+
         st.session_state['progress_bar_space'] = st.container()
 
         try:

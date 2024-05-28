@@ -257,6 +257,14 @@ if __name__ == '__main__':
             _, c2, _ = st.columns(3)
             # User needs to click button to upload selected files
             if c2.form_submit_button("Add files to workspace", type="primary"):
+
+                if 'selected_experiment0_tagger' in st.session_state:
+                    del(st.session_state['selected_experiment0_tagger'])
+                if "saved_layout_setting_tagger" in st.session_state and len(st.session_state["saved_layout_setting_tagger"]) > 1:
+                    for exp_index in range(1, len(st.session_state["saved_layout_setting_tagger"])):
+                        if f"selected_experiment{exp_index}_tagger" in st.session_state:
+                            del(st.session_state[f"selected_experiment{exp_index}_tagger"])
+
                 # Copy uploaded mzML files to deconv-mzML-files directory
                 if uploaded_file:
                     # A list of files is required, since online allows only single upload, create a list
