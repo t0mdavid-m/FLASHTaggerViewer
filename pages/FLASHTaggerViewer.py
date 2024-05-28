@@ -214,17 +214,12 @@ def content():
 
 
     ### for only single experiment on one view
-    col1, col2 =  st.columns([0.9, 0.1])
-    with col1:
-        st.selectbox(
-            "choose experiment", experiment_df['Experiment Name'], 
-            key="selected_experiment_dropdown_tagger", 
-            index=name_to_index[st.session_state.selected_experiment0_tagger] if 'selected_experiment0_tagger' in st.session_state else None
-        )
-    with col2:
-        st.text('')
-        st.text('')
-        st.button('apply', on_click=select_experiment)
+    st.selectbox(
+        "choose experiment", experiment_df['Experiment Name'], 
+        key="selected_experiment_dropdown_tagger", 
+        index=name_to_index[st.session_state.selected_experiment0_tagger] if 'selected_experiment0_tagger' in st.session_state else None,
+        on_change=select_experiment
+    )
 
     if 'selected_experiment0_tagger' in st.session_state:
         selected_exp0 = experiment_df[experiment_df['Experiment Name'] == st.session_state.selected_experiment0_tagger]
@@ -242,18 +237,12 @@ def content():
 
             st.divider() # horizontal line
 
-            col1, col2 =  st.columns([0.9, 0.1])
-            with col1:
-                st.selectbox(
-                    "choose experiment", experiment_df['Experiment Name'], 
-                    key=f'selected_experiment_dropdown_{exp_index}_tagger',
-                    index = name_to_index[st.session_state[f'selected_experiment{exp_index}_tagger']] if f'selected_experiment{exp_index}_tagger' in st.session_state else None
-                )
-            with col2:
-                st.text('')
-                st.text('')
-                st.button('apply', on_click=select_experiment, key=f'button_{exp_index}' if exp_index < len(experiment_df) else 0)
-
+            st.selectbox(
+                "choose experiment", experiment_df['Experiment Name'], 
+                key=f'selected_experiment_dropdown_{exp_index}_tagger',
+                index = name_to_index[st.session_state[f'selected_experiment{exp_index}_tagger']] if f'selected_experiment{exp_index}_tagger' in st.session_state else None,
+                on_change=select_experiment
+            )
 
             # if #experiment input files are less than #layouts, all the pre-selection will be the first experiment
             if f"selected_experiment{exp_index}_tagger" in st.session_state:
