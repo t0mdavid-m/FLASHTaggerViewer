@@ -447,10 +447,10 @@ class DeconvWorkflow(WorkflowManager):
             out_quant = join(folder_path, f'quant.tsv')
             out_annotated_mzml = join(folder_path, f'anno_annotated.mzML')
             out_annotated_mzml_viewer = join(folder_path_anno, f'{file_name}_{current_time}_annotated.mzML')
-            out_msalign1 = join(folder_path, f'msalign1_ms1.msalign')
-            out_msalign2 = join(folder_path, f'msalign2_ms2.msalign')
-            out_feature1 = join(folder_path, f'feature1_ms1.feature')
-            out_feature2 = join(folder_path, f'feature2_ms2.feature')
+            out_msalign1 = join(folder_path, f'toppic_ms1.msalign')
+            out_msalign2 = join(folder_path, f'toppic_ms2.msalign')
+            out_feature1 = join(folder_path, f'toppic_ms1.feature')
+            out_feature2 = join(folder_path, f'toppic_ms2.feature')
             all_outputs = [
                 out_tsv, out_spec1, out_spec2, out_spec3, out_spec4, 
                 out_mzml, out_quant, out_annotated_mzml, out_msalign1,
