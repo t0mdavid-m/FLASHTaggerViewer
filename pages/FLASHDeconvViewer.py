@@ -100,7 +100,7 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
 def setSequenceViewInDefaultView():
     if 'input_sequence' in st.session_state and st.session_state.input_sequence:
         global DEFAULT_LAYOUT
-        DEFAULT_LAYOUT = DEFAULT_LAYOUT + [['sequence_view']] + [['internal_fragment_map']]
+        DEFAULT_LAYOUT = DEFAULT_LAYOUT + [['sequence_view']]
 
 
 def select_experiment():
