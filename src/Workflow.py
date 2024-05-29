@@ -428,6 +428,7 @@ class DeconvWorkflow(WorkflowManager):
             folder_path = join(base_path, 'FLASHDeconvOutput', '%s_%s'%(file_name, current_time))
             folder_path_anno = join(base_path, self.tool_name, 'anno-mzMLs')
             folder_path_deconv = join(base_path, self.tool_name, 'deconv-mzMLs')
+            folder_path_tsv = join(base_path, self.tool_name, 'tsv-files')
 
             if exists(folder_path):
                 rmtree(folder_path)
@@ -436,8 +437,11 @@ class DeconvWorkflow(WorkflowManager):
                 makedirs(folder_path_anno)
             if not exists(folder_path_deconv):
                 makedirs(folder_path_deconv)
+            if not exists(folder_path_tsv):
+                makedirs(folder_path_tsv)
             
             out_tsv = join(folder_path, f'out.tsv')
+            out_tsv_fdr = join(folder_path_tsv, f'{file_name}_{current_time}.tsv')
             out_spec1 = join(folder_path, f'spec1.tsv')
             out_spec2 = join(folder_path, f'spec2.tsv')
             out_spec3 = join(folder_path, f'spec3.tsv')
@@ -478,3 +482,4 @@ class DeconvWorkflow(WorkflowManager):
 
             copyfile(out_mzml, out_deconv_mzml_viewer)
             copyfile(out_annotated_mzml, out_annotated_mzml_viewer)
+            copyfile(out_tsv, out_tsv_fdr)
