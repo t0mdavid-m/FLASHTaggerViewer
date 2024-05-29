@@ -134,7 +134,7 @@ def parseUploadedFiles():
             st.success('Done parsing the experiment %s!' % exp_name)
 
     for tsv_file in new_tsv_files:
-        df = pd.read_csv(Path(st.session_state.workspace, "tsv-files", tsv_file), sep='\t')
+        df = pd.read_csv(Path(st.session_state.workspace, tool, "tsv-files", tsv_file), sep='\t')
         st.session_state['parsed_tsv_files'][tsv_file] = df
 
 def showUploadedFilesTable() -> bool:
