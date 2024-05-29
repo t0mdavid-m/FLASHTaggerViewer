@@ -113,13 +113,22 @@ def parseFLASHDeconvOutput(annotated, deconvolved):
 
     for k in scoreMaps:
         df[k] = scoreMaps[k]
-
+    spec_index = 1;       
     for spec, specPeaks in zip(annotated_exp, allPeaks):
         mstr = spec.getMetaValue('DeconvMassPeakIndices')
         # Split the string into peak items
         peak_items = mstr.split(';')
+        type_accession = 'MS:1000768'
         sourcefiles = annotated_exp.getSourceFiles()
-        scan_number = SpectrumLookup().extractScanNumber(spec.getNativeID(), sourcefiles[0].getNativeIDTypeAccession()) if sourcefiles else -1
+
+        if sourcefiles:
+            type_accession = sourcefiles[0].getNativeIDTypeAccession()
+            if not type_accession:
+                type_accession = 'MS:1000768'
+
+        scan_number = SpectrumLookup().extractScanNumber(spec.getNativeID(), type_accession)
+        scan_number = scan_number if scan_number > 0 else spec_index
+        spec_index = spec_index + 1
         scans.append(scan_number)
         # Create a list to store the parsed peaks
         parsed_peaks = []
@@ -169,7 +178,6 @@ def parseFLASHDeconvOutput(annotated, deconvolved):
     df['CombinedPeaks'] = noisyPeaks
     df['MSLevel'] = msLevels
     df['Scan'] = scans
-
     return df, annotateddf, tolerance,  massoffset, chargemass
 
 

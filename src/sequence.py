@@ -103,7 +103,6 @@ def getFragmentDataFromSeq(sequence, coverage=None, maxCoverage=None):
         prefix_ions, suffix_ions = getFragmentMassesWithSeq(protein, ion_type)
         out_object['fragment_masses_%s' % ion_type[0]] = prefix_ions
         out_object['fragment_masses_%s' % ion_type[1]] = suffix_ions
-
     return out_object
 
 # Define amino acid masses with high resolution
