@@ -228,7 +228,7 @@ if __name__ == '__main__':
                                             ['anno-mzMLs', 'deconv-mzMLs', 'tags-tsv', 'proteins-tsv']):
                 for file in Path("example-data", "flashtagger").glob(filetype):
                     if file.name not in st.session_state[session_name]:
-                        shutil.copy(file, Path(st.session_stat.workspace, tool, session_name, file.name))
+                        shutil.copy(file, Path(st.session_state.workspace, tool, session_name, file.name))
                         st.session_state[session_name].append(file.name)
             # parsing the example files is done in parseUploadedFiles later
             st.success("Example mzML files loaded!")
