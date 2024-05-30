@@ -130,21 +130,6 @@ aa_masses = {
     'X' : 0
 }
 
-def calculate_exact_mass(sequence, shift):
-    """
-    Calculates the exact mass of a protein sequence using high-resolution amino acid masses.
-
-    Parameters:
-    sequence (str): the amino acid sequence
-
-    Returns:
-    mass (float): the exact mass of the protein sequence
-    """
-    mass = sum([aa_masses[aa] for aa in sequence])
-    mass += 18.010564683 + shift  # add mass of water molecule
-    return mass
-
-
 def getInternalFragmentMassesWithSeq(sequence, res_type):
     shift = -H20 if res_type == 'by' or res_type == 'cz' else (-H20-NH3 if res_type == 'bz' else -H20+NH3)
     masses = []
@@ -154,13 +139,17 @@ def getInternalFragmentMassesWithSeq(sequence, res_type):
     for i, s in enumerate(sequence):
         if i == len(sequence)-1:
             break
+        mass = 0.0
         for j, t in enumerate(sequence):
+            if j >= i:
+                mass = mass + aa_masses[sequence[j]]
             if j < i+5-1:
                 continue
-            subs = sequence[i:j+1]
-            masses.append(calculate_exact_mass(subs, shift))
+
+            masses.append(mass + 18.010564683 + shift)
             start_indices.append(i)
             end_indices.append(j+1)
+
     return masses, start_indices, end_indices
 
 
