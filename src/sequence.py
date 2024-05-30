@@ -130,13 +130,53 @@ aa_masses = {
     'X' : 0
 }
 
+def isMatchWithTolerance(A, t, s):
+    """
+    Check if there is a value in sorted list A that matches t within a given ppm tolerance s.
+
+    Parameters:
+    A (list of float): Sorted list of values.
+    t (float): The target value to match.
+    s (float): The tolerance in parts per million (ppm).
+
+    Returns:
+    bool: True if there is a match within the tolerance, False otherwise.
+    """
+    # Convert the tolerance from ppm to an absolute value
+    tolerance = t * s / 1e6
+
+    # Binary search approach for efficiency due to the sorted nature of A
+    left, right = 0, len(A) - 1
+
+    while left <= right:
+        mid = (left + right) // 2
+        if abs(A[mid] - t) <= tolerance:
+            return True
+        elif A[mid] < t:
+            left = mid + 1
+        else:
+            right = mid - 1
+
+    return False
+
+
 def getInternalFragmentMassesWithSeq(sequence, res_type):
     shift = -H20 if res_type == 'by' or res_type == 'cz' else (-H20-NH3 if res_type == 'bz' else -H20+NH3)
     masses = []
     start_indices = []
     end_indices = []
     # protein('sequence', protein.toString())
+
+    protein = AASequence.fromString(sequence)#tmp code
+    byp, bys = getFragmentMassesWithSeq(protein, 'by') #tmp code
+    czp, czs = getFragmentMassesWithSeq(protein, 'cz') #tmp code
+
+    termianl_masses = byp + bys + czp + czs#tmp code
+    termianl_masses.sort()#tmp code
+
     for i, s in enumerate(sequence):
+        if i == 0:
+            continue
         if i == len(sequence)-1:
             break
         mass = 0.0
@@ -145,6 +185,9 @@ def getInternalFragmentMassesWithSeq(sequence, res_type):
                 mass = mass + aa_masses[sequence[j]]
             if j < i+5-1:
                 continue
+
+            if isMatchWithTolerance(termianl_masses, mass, 10.0): #tmp code
+                continue #tmp code
 
             masses.append(mass + 18.010564683 + shift)
             start_indices.append(i)
