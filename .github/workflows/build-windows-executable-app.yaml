@@ -243,6 +243,7 @@ jobs:
     - name: Create All-in-one executable folder
       run: |
         mkdir streamlit_exe
+        mkdir streamlit_exe/js-component
         mv python-${{ env.PYTHON_VERSION }} streamlit_exe
         mv run_app.bat streamlit_exe
         cp -r src streamlit_exe
@@ -255,7 +256,7 @@ jobs:
         cp openms-bin/FLASHTagger.exe streamlit_exe
         cp openms-bin/DecoyDatabase.exe streamlit_exe
         cp -r share streamlit_exe/share
-        cp -r js-dist streamlit_exe/js-dist
+        cp -r js-dist streamlit_exe/js-component/dist
         cp app.py streamlit_exe
 
     - name: Delete OpenMS bin artifact
