@@ -140,7 +140,7 @@ def page_setup(page: str = "", help_text: str = "") -> dict[str, Any]:
             st.session_state.workspace = Path(workspaces_dir, "default")
 
     # If run in hosted mode, show captcha as long as it has not been solved
-    if not st.session_state["controllo"]:
+    if ("controllo" not in  st.session_state) or (not st.session_state["controllo"]):
         # Hide all pages
         hide_pages(ALL_SECTIONS)
         # Apply captcha by calling the captcha_control function
