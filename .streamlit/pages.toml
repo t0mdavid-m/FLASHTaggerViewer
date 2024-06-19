@@ -1,0 +1,91 @@
+[[pages]]
+name = "FLASHViewer"
+path = "app.py"
+icon = "🏠"
+
+[[pages]]
+name = "FLASHDeconv"
+is_section = true
+icon = "⚡️"
+
+[[pages]]
+path = "pages/FLASHDeconvWorkflow.py"
+name = "Workflow"
+icon = "⚙️"
+
+[[pages]]
+path = "pages/FileUpload.py"
+name = "File Upload"
+icon = "📁"
+
+[[pages]]
+path = "pages/SequenceInput.py"
+name = "Sequence Input"
+icon = "🧵"
+
+[[pages]]
+path = "pages/LayoutManager.py"
+name = "Layout Manager"
+icon = "📝️"
+
+[[pages]]
+path = "pages/FLASHDeconvViewer.py"
+name = "Viewer"
+icon = "👀"
+
+[[pages]]
+path = "pages/FLASHDeconvDownload.py"
+name = "Download"
+icon = "⬇️"
+
+[[pages]]
+path = "pages/FLASHFDR.py"
+name = "ECDF Plot"
+icon = "📈"
+
+[[pages]]
+name = "FLASHTnT"
+is_section = true
+icon = "💥"
+
+
+[[pages]]
+path = "pages/FLASHTaggerWorkflow.py"
+name = "Workflow"
+icon = "⚙️"
+
+[[pages]]
+path = "pages/FileUploadTagger.py"
+name = "File Upload"
+icon = "📁"
+
+[[pages]]
+path = "pages/LayoutManagerTagger.py"
+name = "Layout Manager"
+icon = "📝️"
+
+[[pages]]
+path = "pages/FLASHTaggerViewer.py"
+name = "Viewer"
+icon = "👀"
+
+[[pages]]
+path = "pages/FLASHTaggerDownload.py"
+name = "Download"
+icon = "⬇️"
+
+[[pages]]
+name = "FLASHQuant"
+is_section = true
+icon = "📊"
+
+
+[[pages]]
+path = "pages/FileUpload_FLASHQuant.py"
+name = "File Upload"
+icon = "📁"
+
+[[pages]]
+path = "pages/FLASHQuantViewer.py"
+name = "Viewer"
+icon = "👀"
