@@ -6,12 +6,14 @@ import uuid
 from typing import Any
 from pathlib import Path
 from src.captcha_ import captcha_control
+from st_pages import add_page_title, hide_pages, show_pages_from_config
 
 import streamlit as st
 import pandas as pd
 
 # set these variables according to your project
 APP_NAME = "FLASHViewer"
+ALL_SECTIONS = [APP_NAME, "FLASHDeconv", "FLASHTnT", "FLASHQuant"]
 
 
 def load_params(default: bool = False) -> dict[str, Any]:
@@ -89,13 +91,22 @@ def page_setup(page: str = "", help_text: str = "") -> dict[str, Any]:
         dict[str, Any]: A dictionary containing the parameters loaded from the parameter file.
     """
     # Set Streamlit page configurations
-    st.set_page_config(
-        page_title=APP_NAME,
-        page_icon="assets/OpenMS.png",
-        layout="wide",
-        initial_sidebar_state="auto",
-        menu_items=None
-    )
+    configuration = {
+        "page_title" : APP_NAME,
+        "page_icon" : "assets/OpenMS.png",
+        "layout" : "wide",
+        "initial_sidebar_state" : "auto",
+        "menu_items" : None
+    }
+
+    # Setup sidebar
+    if 'current_tool_name' in st.session_state:
+        hide_pages(list(set(ALL_SECTIONS) - {APP_NAME} - {st.session_state.current_tool_name}))
+        add_page_title(**configuration)
+
+    else:
+        show_pages_from_config()
+        add_page_title(**configuration)
 
     st.markdown("""
         <style>
@@ -114,10 +125,10 @@ def page_setup(page: str = "", help_text: str = "") -> dict[str, Any]:
         # Check location
         if "local" in sys.argv:
             st.session_state.location = "local"
-            st.session_state.controlo = True
+            st.session_state.controllo = True
         else:
             st.session_state.location = "online"
-            st.session_state.controlo = False
+            st.session_state.controllo = False
         # if we run the packaged windows version, we start within the Python directory -> need to change working directory to ..\streamlit-template
         if "windows" in sys.argv:
             os.chdir("../flashtaggerviewer")
@@ -129,7 +140,9 @@ def page_setup(page: str = "", help_text: str = "") -> dict[str, Any]:
             st.session_state.workspace = Path(workspaces_dir, "default")
 
     # If run in hosted mode, show captcha as long as it has not been solved
-    if not st.session_state["controlo"]:
+    if not st.session_state["controllo"]:
+        # Hide all pages
+        hide_pages(ALL_SECTIONS)
         # Apply captcha by calling the captcha_control function
         captcha_control()
 
