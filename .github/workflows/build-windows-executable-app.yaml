@@ -2,7 +2,7 @@ name: Build executable for Windows
 
 on:
   push:
-    branches: [ "main", "TaggerViewerDeploy"]
+    branches: [ "main", "TaggerViewerDeploy", "build_windows_with_dependencies"]
   pull_request:
     branches: [ "main", "TaggerViewerDeploy"]
 
@@ -165,6 +165,17 @@ jobs:
           CCACHE_COMPRESSLEVEL: 12
           CCACHE_MAXSIZE: 400M
 
+    - name: Package
+      shell: bash
+      run: |
+          ctest --output-on-failure -V -S $GITHUB_WORKSPACE/OpenMS/tools/ci/cipackage.cmake
+      env:
+          SOURCE_DIRECTORY: "${{ github.workspace }}/OpenMS"
+          PACKAGE_TYPE: nsis
+          SEARCH_ENGINES_DIRECTORY: "${{ github.workspace }}/_thirdparty"
+          CI_PROVIDER: "GitHub-Actions"
+          PACK_ZIP: 1
+
     #- name: Test Windows
     #  shell: bash
     #  run: $LAUNCHER ctest --output-on-failure -V -S $GITHUB_WORKSPACE/OpenMS/tools/ci/citest.cmake
@@ -174,17 +185,11 @@ jobs:
     #     CI_PROVIDER: "GitHub-Actions"
     #     BUILD_NAME: "${{ env.RUN_NAME }}-Win64-class-topp-${{ github.run_number }}"
 
-    - name: Upload TOPP tools as artifact
-      uses: actions/upload-artifact@v3
+    - name: Upload package as artifact
+      uses: actions/upload-artifact@v4
       with:
-        name: OpenMS-bin
-        path: OpenMS/bld/bin
-
-    - name: Upload share as artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: OpenMS-share
-        path: OpenMS/share
+        name: openms-package
+        path: ${{ github.workspace }}/OpenMS/bld/*.zip
 
   build-executable:
     runs-on: windows-latest
@@ -203,17 +208,19 @@ jobs:
         name: vue-js-dist
         path: js-dist
 
-    - name: Download TOPP tools as artifact
+    - name: Download package as artifact
       uses: actions/download-artifact@v3
       with:
-        name: OpenMS-bin
-        path: openms-bin
+        name: openms-package
+        path: openms-package
 
-    - name: Download share as artifact
-      uses: actions/download-artifact@v3
-      with:
-        name: OpenMS-share
-        path: share
+    - name: Extract bin and share from package
+      run: |
+        cd openms-package
+        unzip "*.zip"
+        ls
+        cp -r bin ../openms-bin
+        cp -r share ../share
 
     - name: Setup python embeddable version
       run: |
@@ -253,7 +260,7 @@ jobs:
         cp -r .streamlit streamlit_exe
         cp openms-bin/*.dll streamlit_exe
         cp openms-bin/FLASHDeconv.exe streamlit_exe
-        cp openms-bin/FLASHTagger.exe streamlit_exe
+        cp openms-bin/FLASHTnT.exe streamlit_exe
         cp openms-bin/DecoyDatabase.exe streamlit_exe
         cp -r share streamlit_exe/share
         cp -r js-dist streamlit_exe/js-component/dist
