@@ -175,6 +175,7 @@ jobs:
           SEARCH_ENGINES_DIRECTORY: "${{ github.workspace }}/_thirdparty"
           CI_PROVIDER: "GitHub-Actions"
           PACK_ZIP: 1
+          CPACK_PACKAGE_FILE_NAME: "openms-package"
 
     #- name: Test Windows
     #  shell: bash
