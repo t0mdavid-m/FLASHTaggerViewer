@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ "main", "TaggerViewerDeploy"]
 
+# Define needed TOPP tools here
+env:
+  TOPP_TOOLS: "FLASHDeconv FLASHTnT DecoyDatabase"
+
 jobs:
   build-vue-js-component:
     runs-on: ubuntu-latest
@@ -259,12 +263,13 @@ jobs:
         cp -r example-data streamlit_exe
         cp -r .streamlit streamlit_exe
         cp openms-bin/*.dll streamlit_exe
-        cp openms-bin/FLASHDeconv.exe streamlit_exe
-        cp openms-bin/FLASHTnT.exe streamlit_exe
-        cp openms-bin/DecoyDatabase.exe streamlit_exe
         cp -r share streamlit_exe/share
         cp -r js-dist streamlit_exe/js-component/dist
         cp app.py streamlit_exe
+
+        for file in ${{ env.TOPP_TOOLS }}; do
+            cp "openms-bin/${file}.exe" streamlit_exe
+          done
 
     - name: Delete OpenMS package artifact
       uses: geekyeggo/delete-artifact@v2
