@@ -267,11 +267,10 @@ jobs:
         cp -r js-dist streamlit_exe/js-component/dist
         cp app.py streamlit_exe
 
-        - |
-            IFS=' ' read -r -a files <<< "${TOPP_TOOLS}"
-            for file in "${files[@]}"; do
-              cp "openms-bin/${file}.exe" "streamlit_exe/${file}.exe"
-            done
+        IFS=' ' read -r -a files <<< "${TOPP_TOOLS}"
+        for file in "${files[@]}"; do
+          cp "openms-bin/${file}.exe" "streamlit_exe/${file}.exe"
+        done
 
     - name: Delete OpenMS package artifact
       uses: geekyeggo/delete-artifact@v2
