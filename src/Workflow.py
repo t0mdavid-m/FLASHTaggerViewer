@@ -93,7 +93,7 @@ class TagWorkflow(WorkflowManager):
 
     def __init__(self) -> None:
         # Initialize the parent class with the workflow name.
-        super().__init__("FLASHTagger", st.session_state["workspace"])
+        super().__init__("FLASHTnT", st.session_state["workspace"])
         self.tool_name = 'FLASHTaggerViewer'
 
 
@@ -121,7 +121,7 @@ class TagWorkflow(WorkflowManager):
 
         # Create tabs for different analysis steps.
         t = st.tabs(
-            ["**FLASHDeconv**", "**FLASHTagger**"]
+            ["**FLASHDeconv**", "**FLASHTnT**"]
         )
         with t[0]:
             # Parameters for FeatureFinderMetabo TOPP tool.
@@ -139,7 +139,7 @@ class TagWorkflow(WorkflowManager):
         with t[1]:
             # Parameters for FeatureFinderMetabo TOPP tool.
             self.ui.input_TOPP(
-                'FLASHTagger', 
+                'FLASHTnT', 
                 #exclude_parameters = [
                 #    'min_mz', 'max_mz', 'min_rt', 'max_rt', 'max_ms_level',
                 #    'use_RNA_averagine', 'tol', 'min_mass', 'max_mass',
@@ -248,7 +248,7 @@ class TagWorkflow(WorkflowManager):
                 rmtree(folder_path)
             makedirs(folder_path)
 
-            tagger_params = self.executor.parameter_manager.get_parameters_from_json()['FLASHTagger']
+            tagger_params = self.executor.parameter_manager.get_parameters_from_json()['FLASHTnT']
             if ('Tagger:fdr' in tagger_params) and (tagger_params['Tagger:fdr'] < 1):
                 if self.executor.parameter_manager.get_parameters_from_json()['few_proteins']:
                     ratio = 100
@@ -280,7 +280,7 @@ class TagWorkflow(WorkflowManager):
             )
 
             self.executor.run_topp(
-                'FLASHTagger',
+                'FLASHTnT',
                 input_output={
                     'in' : [out_deconv],
                     'fasta' : [out_db],
