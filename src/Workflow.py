@@ -480,6 +480,10 @@ class DeconvWorkflow(WorkflowManager):
                 }
             )
 
-            copyfile(out_mzml, out_deconv_mzml_viewer)
-            copyfile(out_annotated_mzml, out_annotated_mzml_viewer)
-            copyfile(out_tsv, out_tsv_fdr)
+            for file, target in zip(
+                (out_mzml, out_annotated_mzml, out_tsv),
+                (out_deconv_mzml_viewer, out_annotated_mzml_viewer, out_tsv_fdr)
+            ):
+                if not exists(file):
+                    continue
+                copyfile(file, target)
