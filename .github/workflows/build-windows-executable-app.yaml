@@ -2,9 +2,9 @@ name: Build executable for Windows
 
 on:
   push:
-    branches: [ "main", "TaggerViewerDeploy", "build_windows_with_dependencies"]
+    branches: [ "main", "develop", "TaggerViewerDeploy"]
   pull_request:
-    branches: [ "main", "TaggerViewerDeploy"]
+    branches: [ "main", "develop", "TaggerViewerDeploy"]
 
 # Define needed TOPP tools here
 env:
