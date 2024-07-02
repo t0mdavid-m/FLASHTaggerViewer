@@ -70,7 +70,7 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
     protein_df['length'] = protein_df['ProteinSequence'].apply(lambda x : len(x))
     protein_df = protein_df.rename(
         columns={
-            'ProteinIndex' : 'index',
+            'ProteoformIndex' : 'index',
             'ProteinAccession' : 'accession',
             'ProteinDescription' : 'description',
             'ProteinSequence' : 'sequence'
