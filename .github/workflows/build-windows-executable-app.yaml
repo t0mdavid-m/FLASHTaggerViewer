@@ -272,7 +272,7 @@ jobs:
         }
 
     - name: Delete OpenMS package artifact
-      uses: geekyeggo/delete-artifact@v2
+      uses: geekyeggo/delete-artifact@v5
       with:
           name: openms-package
           
@@ -281,7 +281,7 @@ jobs:
     #    7z a OpenMS-App.zip ./streamlit_exe/* -r
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: OpenMS-App
         path: streamlit_exe
