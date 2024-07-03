@@ -276,12 +276,12 @@ jobs:
       with:
           name: openms-package
           
-    #- name: Compress streamlit_exe folder to OpenMS-App.zip
-    #  run: |
-    #    7z a OpenMS-App.zip ./streamlit_exe/* -r
+    - name: Compress streamlit_exe folder to OpenMS-App.zip
+     run: |
+       7z a OpenMS-App.zip ./streamlit_exe/* -r
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: OpenMS-App
-        path: streamlit_exe
+        path: OpenMS-App.zip
