@@ -98,11 +98,12 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
             str(sequence), p_cov, np.max(coverage)
         )
 
-    empty_row = pd.DataFrame(np.nan, index=[0], columns=protein_df.columns)
-    protein_df = pd.concat([protein_df, empty_row], ignore_index=True)
+    empty_row = pd.DataFrame(np.nan, index=[-1], columns=protein_df.columns)
+    protein_df = pd.concat([protein_df, empty_row])
     protein_df.loc[-1,'index'] = -1
     protein_df.loc[-1,'accession'] = 'unassigned'
     protein_df.loc[-1,'description'] = 'unassigned'
+
 
     components = []
     data_to_send = {}
