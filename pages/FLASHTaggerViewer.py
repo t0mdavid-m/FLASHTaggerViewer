@@ -66,8 +66,6 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
             'StartPosition' : 'StartPos' 
         }
     )
-    print('!!!!!')
-    print(tag_df.columns)
 
     # protein_db = st.session_state['protein_db'][selected_db_file]
     protein_df = st.session_state['protein_dfs_tagger'][selected_db_file]
