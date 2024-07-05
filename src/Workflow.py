@@ -116,7 +116,7 @@ class TagWorkflow(WorkflowManager):
 
         self.ui.input_widget(
             'few_proteins', name='Do you expect <100 Proteins?', widget_type='checkbox', default=True,
-            help='If set, the decoy database will be 100 times larger than the target database for better FDR estimation resolution. This increases the runtime significantly.'
+            help='If set, the decoy database will be 10 times larger than the target database for better FDR estimation resolution. This increases the runtime significantly.'
         )
 
         # Create tabs for different analysis steps.
@@ -251,7 +251,7 @@ class TagWorkflow(WorkflowManager):
             tagger_params = self.executor.parameter_manager.get_parameters_from_json()['FLASHTnT']
             if ('Tagger:fdr' in tagger_params) and (tagger_params['Tagger:fdr'] < 1):
                 if self.executor.parameter_manager.get_parameters_from_json()['few_proteins']:
-                    ratio = 100
+                    ratio = 10
                 else:
                     ratio = 1
                 self.executor.run_topp(
