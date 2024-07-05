@@ -45,6 +45,10 @@ def main():
     """
     Display main page content.
     """
+
+    tools = ['FLASHDeconv', 'FLASHTnT', 'FLASHQuant']
+    tool_indices = {t : i for i, t in enumerate(tools)}
+
     # sidebar to toggle between tools
     if 'current_tool_name' not in st.session_state:
         st.session_state.changed_tool_name = 'FLASHDeconv'
@@ -65,7 +69,7 @@ def main():
         """)
 
     # when entered into other page, key is resetting (emptied) - thus set the value with index
-    st.selectbox("Choose a tool", ['FLASHDeconv', 'FLASHTnT', 'FLASHQuant'], index=0,
+    st.selectbox("Choose a tool", tools, index=tool_indices[st.session_state.current_tool_name],
                  on_change=onToolChange(), key='changed_tool_name')
 
 
