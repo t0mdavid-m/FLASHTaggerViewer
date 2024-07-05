@@ -36,7 +36,7 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
     for i, row in tag_df.iterrows():
         # No splitting if it is not recognized as string
         if pd.isna(row['ProteoformIndex']):
-            continue
+            row['ProteoformIndex'] = -1
         if isinstance(row['ProteoformIndex'], str) and (';' in row['ProteoformIndex']):
             no_items = row['ProteoformIndex'].count(';') + 1
             for c in new_tag_df.keys():
@@ -97,6 +97,12 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
         sequence_data[pid] = getFragmentDataFromSeq(
             str(sequence), p_cov, np.max(coverage)
         )
+
+    empty_row = pd.DataFrame(np.nan, index=[0], columns=protein_df.columns)
+    protein_df = pd.concat([protein_df, empty_row], ignore_index=True)
+    protein_df.loc[-1,'index'] = -1
+    protein_df.loc[-1,'accession'] = 'unassigned'
+    protein_df.loc[-1,'description'] = 'unassigned'
 
     components = []
     data_to_send = {}
