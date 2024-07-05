@@ -1,4 +1,6 @@
 import streamlit as st
+import multiprocessing
+import sys
 import time
 from .workflow.WorkflowManager import WorkflowManager
 from pages.FileUploadTagger import postprocessingAfterUpload_Tagger
@@ -114,6 +116,12 @@ class TagWorkflow(WorkflowManager):
         self.ui.select_input_file("mzML-files", multiple=True)
         self.ui.select_input_file("fasta-file", multiple=False)
 
+        if 'local' in sys.argv:
+            self.ui.input_widget(
+                'threads', name='threads', default=multiprocessing.cpu_count(),
+                help='The number of threads that should be used to run the tools.'
+            )
+
         self.ui.input_widget(
             'few_proteins', name='Do you expect <100 Proteins?', widget_type='checkbox', default=True,
             help='If set, the decoy database will be 100 times larger than the target database for better FDR estimation resolution. This increases the runtime significantly.'
@@ -228,6 +236,11 @@ class TagWorkflow(WorkflowManager):
 
         #self.logger.log(self.file_manager.workflow_dir)
 
+        if 'threads' in self.executor.parameter_manager.get_parameters_from_json():
+            threads = self.executor.parameter_manager.get_parameters_from_json()['threads']
+        else:
+            threads = 8
+
 
         uploaded_files = []
         for in_mzML in in_mzMLs:
@@ -276,6 +289,9 @@ class TagWorkflow(WorkflowManager):
                     'out' : ['_.tsv'],
                     'out_annotated_mzml' :  [out_anno],
                     'out_mzml' :  [out_deconv],
+                },
+                params_manual = {
+                    'threads' : threads
                 }
             )
 
@@ -287,6 +303,9 @@ class TagWorkflow(WorkflowManager):
                     'out_tag' :  [out_tag],
                     'out_protein' :  [out_protein]
                 },
+                params_manual = {
+                    'threads' : threads
+                }
             )
 
             uploaded_files.append(out_db)
@@ -358,6 +377,12 @@ class DeconvWorkflow(WorkflowManager):
         # Allow users to select mzML files for the analysis.
         self.ui.select_input_file("mzML-files", multiple=True)
 
+        if 'local' in sys.argv:
+            self.ui.input_widget(
+                'threads', name='threads', default=multiprocessing.cpu_count(),
+                help='The number of threads that should be used to run the tools.'
+            )
+
         self.ui.input_TOPP(
             'FLASHDeconv',
             exclude_parameters = [
@@ -421,6 +446,11 @@ class DeconvWorkflow(WorkflowManager):
         if not exists(join(base_path, 'FLASHDeconvOutput')):
             makedirs(join(base_path, 'FLASHDeconvOutput'))
 
+        if 'threads' in self.executor.parameter_manager.get_parameters_from_json():
+            threads = self.executor.parameter_manager.get_parameters_from_json()['threads']
+        else:
+            threads = 8
+
         for in_mzML in in_mzMLs:
             # Get folder name
             file_name = splitext(basename(in_mzML))[0]
@@ -477,6 +507,9 @@ class DeconvWorkflow(WorkflowManager):
                     'out_msalign2' : [out_msalign2],
                     'out_feature1' : [out_feature1],
                     'out_feature2' : [out_feature2],
+                },
+                params_manual = {
+                    'threads' : threads
                 }
             )
 

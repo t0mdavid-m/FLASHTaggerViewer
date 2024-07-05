@@ -8,6 +8,7 @@ import json
 import sys
 import importlib.util
 import time
+import re
 from io import BytesIO
 import zipfile
 
@@ -544,7 +545,7 @@ class StreamlitUI:
             excluded_keys = [
                 "log",
                 "debug",
-                #"threads",
+                "threads",
                 "no_progress",
                 "force",
                 "version",
@@ -597,11 +598,15 @@ class StreamlitUI:
                  if section_description is None:
                     section_description = p['section_description']
                     
-                 elif section_description != p['section_description']:
+                 if section_description != p['section_description']:
                     section_description = p['section_description']
-                    st.markdown(f"**{section_description}**")
-                    cols = st.columns(num_cols)
-                    i = 0
+                    if not re.match(
+                        fr"Instance '\d+' section for '{topp_tool_name}'",
+                        section_description
+                    ):
+                        st.markdown(f"**{section_description}**")
+                        cols = st.columns(num_cols)
+                        i = 0
             elif display_full_parameter_names:
                 name = key.split(":1:")[1].replace("algorithm:", "").replace(":", " : ")
             else:
