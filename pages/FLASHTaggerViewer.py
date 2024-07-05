@@ -35,10 +35,10 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
     new_tag_df = {c : [] for c in tag_df.columns}
     for i, row in tag_df.iterrows():
         # No splitting if it is not recognized as string
-        if pd.isna(row['ProteinIndex']):
+        if pd.isna(row['ProteoformIndex']):
             continue
-        if isinstance(row['ProteinIndex'], str) and (';' in row['ProteinIndex']):
-            no_items = row['ProteinIndex'].count(';') + 1
+        if isinstance(row['ProteoformIndex'], str) and (';' in row['ProteoformIndex']):
+            no_items = row['ProteoformIndex'].count(';') + 1
             for c in new_tag_df.keys():
                 if (isinstance(row[c], str)) and (';' in row[c]):
                     new_tag_df[c] += row[c].split(';')
@@ -56,24 +56,28 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
 
     # Complete df
     tag_df['Scan'] = 0
-    tag_df['EndPos'] = tag_df['StartPos'] + tag_df['Length'] - 1
-    tag_df['StartPos'] = tag_df['StartPos']
+    tag_df['EndPos'] = tag_df['StartPosition'] + tag_df['Length'] - 1
+    tag_df['StartPosition'] = tag_df['StartPosition']
     tag_df = tag_df.rename(
         columns={
+            'ProteoformIndex' : 'ProteinIndex',
             'DeNovoScore' : 'Score',
-            'Masses' : 'mzs'
+            'Masses' : 'mzs',
+            'StartPosition' : 'StartPos' 
         }
     )
+    print('!!!!!')
+    print(tag_df.columns)
 
     # protein_db = st.session_state['protein_db'][selected_db_file]
     protein_df = st.session_state['protein_dfs_tagger'][selected_db_file]
-    protein_df['length'] = protein_df['ProteinSequence'].apply(lambda x : len(x))
+    protein_df['length'] = protein_df['DatabaseSequence'].apply(lambda x : len(x))
     protein_df = protein_df.rename(
         columns={
             'ProteoformIndex' : 'index',
             'ProteinAccession' : 'accession',
             'ProteinDescription' : 'description',
-            'ProteinSequence' : 'sequence'
+            'DatabaseSequence' : 'sequence'
         }
     )
 
