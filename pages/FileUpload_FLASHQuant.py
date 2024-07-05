@@ -1,10 +1,10 @@
 import streamlit as st
 from pathlib import Path
+import os
 import shutil
 import pandas as pd
 from src.flashquant import parseFLASHQuantOutput
 from src.common import v_space, page_setup, reset_directory, save_params
-from pages.FileUpload import initializeWorkspace
 from src.flashquant import connectTraceWithResult
 
 
@@ -123,9 +123,9 @@ def parsingWithProgressBar(infiles_quant, infiles_trace, infiles_resolution):
             with st.spinner('Parsing the experiment %s...' % exp_name):
                 if resolution_f:
                     quant_df, trace_df, resolution_df = parseFLASHQuantOutput(
-                        Path(st.session_state["workspace"], "quant-files", quant_f),
-                        Path(st.session_state["workspace"], "trace-files", trace_f),
-                        Path(st.session_state["workspace"], "conflict-resolution-files", resolution_f),
+                        Path(st.session_state["workspace"], tool, "quant-files", quant_f),
+                        Path(st.session_state["workspace"], tool, "trace-files", trace_f),
+                        Path(st.session_state["workspace"], tool, "conflict-resolution-files", resolution_f),
                     )
                     st.session_state['conflict_resolution_dfs'][resolution_f] = resolution_df
                 else:
@@ -138,12 +138,31 @@ def parsingWithProgressBar(infiles_quant, infiles_trace, infiles_resolution):
             st.success('Done parsing the experiment: %s!' % exp_name)
 
 
+def initializeWorkspace(input_file_types_: list, parsed_df_types_: list) -> None:
+    """
+    Set up the required directory and session states
+    parameter is needed: this method is used in FLASHQuant
+    """
+    for dirname in input_file_types_:
+        Path(st.session_state.workspace, tool, dirname).mkdir(parents=True, exist_ok=True)
+        if dirname not in st.session_state:
+            # initialization
+            st.session_state[dirname] = []
+        # sync session state and default-workspace
+        st.session_state[dirname] = os.listdir(Path(st.session_state.workspace, tool, dirname))
+
+    # initializing session state for storing data
+    for df_type in parsed_df_types_:
+        if df_type not in st.session_state:
+            st.session_state[df_type] = {}
+
 # page initialization
 params = page_setup()
 
 # make directory to store files & initialize data storage
 input_file_types = ["quant-files", "trace-files", "conflict-resolution-files"]
 parsed_df_types = ["quant_dfs", "trace_dfs", "conflict_resolution_dfs"]
+tool = 'FLASHQuantViewer'
 initializeWorkspace(input_file_types, parsed_df_types)
 
 st.title("File Upload")
@@ -160,7 +179,7 @@ with tabs[1]:
                                           input_file_types):
             for file in Path("example-data/flashquant").glob(filetype):
                 if file.name not in st.session_state[session_name]:
-                    shutil.copy(file, Path(st.session_state["workspace"], session_name, file.name))
+                    shutil.copy(file, Path(st.session_state["workspace"], tool, session_name, file.name))
                     st.session_state[session_name].append(file.name)
         # parsing the example files is done in parseUploadedFiles later
         st.success("Example mzML files loaded!")
