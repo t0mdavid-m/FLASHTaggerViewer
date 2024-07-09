@@ -145,7 +145,7 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
                 component_arguments = Plotly3Dplot(title="Precursor Signals")
             elif comp_name == 'sequence_view':
             #    data_to_send['sequence_data'] = getFragmentDataFromSeq(st.session_state.input_sequence)
-                component_arguments = SequenceViewTagger()
+                component_arguments = SequenceView()
             elif comp_name == 'internal_fragment_map':
             #    data_to_send['internal_fragment_data'] = getInternalFragmentDataFromSeq(st.session_state.input_sequence)
                 component_arguments = InternalFragmentMap()
