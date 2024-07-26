@@ -110,10 +110,12 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
             mod_masses = [float(m) for m in str(row['ModMass']).split(';')]
             mod_starts = [int(s) for s in str(row['ModStart']).split(';')]
             mod_ends = [int(s) for s in str(row['ModEnd']).split(';')]
+            mod_labels = [s[:-1] for s in str(row['ModID']).split(';')]
         else:
             mod_masses = []
             mod_starts = []
             mod_ends = []
+            mod_labels = []
         modifications = []
         for s, m in zip(mod_starts, mod_masses):
             modifications.append((s-start_index, m))
@@ -134,8 +136,9 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
             {
                 'start' : s - 1,
                 'end' : e - 1,
-                'mass_diff' : m
-            } for s, e, m in zip(mod_starts, mod_ends, mod_masses)
+                'mass_diff' : m,
+                'labels' : l
+            } for s, e, m, l in zip(mod_starts, mod_ends, mod_masses, mod_labels)
         ]
 
     empty_row = pd.DataFrame(np.nan, index=[-1], columns=protein_df.columns)
