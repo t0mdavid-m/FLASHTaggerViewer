@@ -301,7 +301,8 @@ class TagWorkflow(WorkflowManager):
                     'in' : [out_deconv],
                     'fasta' : [out_db],
                     'out_tag' :  [out_tag],
-                    'out_pro' :  [out_protein]
+                    'out_pro' :  [out_protein],
+                    'out_prsm' : ['_.tsv']
                 },
                 params_manual = {
                     'threads' : threads

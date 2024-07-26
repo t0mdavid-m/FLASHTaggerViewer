@@ -1,5 +1,7 @@
 import streamlit as st
 from pyopenms import Residue, AASequence, ModificationsDB
+from itertools import product, tee
+from copy import deepcopy
 
 
 fixed_mod_cysteine = {'No modification': 0,
@@ -82,9 +84,16 @@ def setFixedModification(protein):
 
 
 #@st.cache_data
-def getFragmentDataFromSeq(sequence, coverage=None, maxCoverage=None):
+def getFragmentDataFromSeq(sequence, coverage=None, maxCoverage=None, modifications=None):
     protein = AASequence.fromString(sequence)
-    protein, fixed_mods = setFixedModification(protein)  # handling fixed modifications
+
+    if modifications is not None:
+        for i, m in modifications:
+            print(i, m, protein[i].getOneLetterCode())
+            protein.setModificationByDiffMonoMass(i, m)
+        fixed_mods = []
+    else:
+        protein, fixed_mods = setFixedModification(protein)  # handling fixed modifications
 
     # calculating proteoform mass from sequence
     protein_mass = remove_ambigious(protein).getMonoWeight()

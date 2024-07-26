@@ -7,6 +7,11 @@ from zipfile import ZipFile, ZIP_DEFLATED
 from pages.FileUploadTagger import handleInputFiles
 from pages.FileUploadTagger import parseUploadedFiles
 from pages.FileUploadTagger import initializeWorkspace, showUploadedFilesTable
+from pyopenms import AASequence
+
+from src.sequence import remove_ambigious
+
+from itertools import repeat
 
 
 DEFAULT_LAYOUT = [
@@ -94,9 +99,44 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
         p_cov = np.zeros(len(coverage))
         if np.max(coverage) > 0:
             p_cov = coverage/np.max(coverage)
+
+        proteoform_start = row['StartPosition']
+        proteoform_end = row['EndPosition']
+        start_index = 0 if proteoform_start <= 0 else proteoform_start - 1
+        end_index = len(sequence) - 1 if proteoform_end <= 0 else proteoform_end - 1
+
+
+        if row['ModCount'] > 0:
+            mod_masses = [float(m) for m in str(row['ModMass']).split(';')]
+            mod_starts = [int(s) for s in str(row['ModStart']).split(';')]
+            mod_ends = [int(s) for s in str(row['ModEnd']).split(';')]
+        else:
+            mod_masses = []
+            mod_starts = []
+            mod_ends = []
+        modifications = []
+        for s, m in zip(mod_starts, mod_masses):
+            modifications.append((s-start_index, m))
+        
+        sequence = str(sequence)
         sequence_data[pid] = getFragmentDataFromSeq(
-            str(sequence), p_cov, np.max(coverage)
+            str(sequence)[start_index:end_index+1], p_cov, np.max(coverage), 
+            modifications
         )
+
+        sequence_data[pid]['sequence'] = list(sequence)
+        sequence_data[pid]['proteoform_start'] = start_index
+        sequence_data[pid]['proteoform_end'] = end_index
+        sequence_data[pid]['computed_mass'] = row['ProteoformMass']
+        sequence_data[pid]['theoretical_mass'] = remove_ambigious(AASequence.fromString(sequence)).getMonoWeight()
+
+        sequence_data[pid]['modifications'] = [
+            {
+                'start' : s - 1,
+                'end' : e - 1,
+                'mass_diff' : m
+            } for s, e, m in zip(mod_starts, mod_ends, mod_masses)
+        ]
 
     empty_row = pd.DataFrame(np.nan, index=[-1], columns=protein_df.columns)
     protein_df = pd.concat([protein_df, empty_row])
