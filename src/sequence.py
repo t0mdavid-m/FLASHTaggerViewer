@@ -87,13 +87,11 @@ def setFixedModification(protein):
 def getFragmentDataFromSeq(sequence, coverage=None, maxCoverage=None, modifications=None):
     protein = AASequence.fromString(sequence)
 
-    if modifications is not None:
-        for i, m in modifications:
-            print(i, m, protein[i].getOneLetterCode())
-            protein.setModificationByDiffMonoMass(i, m)
-        fixed_mods = []
-    else:
+    # Only apply for FD
+    if modifications is None:
         protein, fixed_mods = setFixedModification(protein)  # handling fixed modifications
+    else:
+        fixed_mods = []
 
     # calculating proteoform mass from sequence
     protein_mass = remove_ambigious(protein).getMonoWeight()
@@ -110,6 +108,33 @@ def getFragmentDataFromSeq(sequence, coverage=None, maxCoverage=None, modificati
     for ion_type in ['ax', 'by', 'cz']:
         # calculate fragment ion masses
         prefix_ions, suffix_ions = getFragmentMassesWithSeq(protein, ion_type)
+        prefix_ions = [[p] for p in prefix_ions]
+        suffix_ions = [[s] for s in suffix_ions]
+        if modifications is not None:
+            for i, pr in enumerate(prefix_ions):
+                unmodified_mass = pr[0]
+                modified_mass = unmodified_mass
+                for s, e, m in modifications:
+                    if (s <= i+1) and (e >= i+1):
+                        modified_mass += m
+                    elif (s <= i+1):
+                        unmodified_mass += m
+                        modified_mass += m
+                pr[0] = unmodified_mass
+                if modifications != unmodified_mass:
+                    pr.append(modified_mass)
+            for i, su in enumerate(reversed(suffix_ions)):
+                unmodified_mass = su[0]
+                modified_mass = unmodified_mass
+                for s, e, m in modifications:
+                    if (s <= i+1) and (e >= i+1):
+                        modified_mass += m
+                    elif (e >= i+1):
+                        unmodified_mass += m
+                        modified_mass += m
+                su[0] = unmodified_mass
+                if abs(modified_mass - unmodified_mass) > 1e-3:
+                    su.append(modified_mass)
         out_object['fragment_masses_%s' % ion_type[0]] = prefix_ions
         out_object['fragment_masses_%s' % ion_type[1]] = suffix_ions
     return out_object
