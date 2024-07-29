@@ -27,7 +27,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         repository: 't0mdavid-m/openms-streamlit-vue-component'
-        ref: 'TaggerViewer'
+        ref: 'FVdeploy'
         path: 'openms-streamlit-vue-component'
 
     - name: Install and build Vue.js component
