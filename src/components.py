@@ -94,12 +94,6 @@ class SequenceView:
     def __init__(self):
         self.componentName = 'SequenceView'
 
-
-class SequenceViewTagger:
-    def __init__(self):
-        self.componentName = 'SequenceViewTagger'
-
-
 class InternalFragmentMap:
     def __init__(self):
         self.componentName = 'InternalFragmentMap'
