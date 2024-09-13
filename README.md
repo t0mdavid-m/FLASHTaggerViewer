@@ -3,6 +3,8 @@
 FLASHViewer for visualizing FLASHDeconv's results \
 This app is based on [OpenMS streamlit template project](https://github.com/OpenMS/streamlit-template).
 
+![Overview](https://github.com/user-attachments/assets/35fe2c24-7dbc-40cd-b8b5-b7504768ade1)
+
 run locally:
 
 `streamlit run app.py local`
