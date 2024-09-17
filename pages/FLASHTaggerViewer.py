@@ -144,8 +144,8 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
     empty_row = pd.DataFrame(np.nan, index=[-1], columns=protein_df.columns)
     protein_df = pd.concat([protein_df, empty_row])
     protein_df.loc[-1,'index'] = -1
-    protein_df.loc[-1,'accession'] = 'unassigned'
-    protein_df.loc[-1,'description'] = 'unassigned'
+    protein_df.loc[-1,'accession'] = 'unassigned sequence tags'
+    protein_df.loc[-1,'description'] = 'unassigned sequence tags'
 
 
     components = []
