@@ -108,8 +108,8 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
 
         if row['ModCount'] > 0:
             mod_masses = [float(m) for m in str(row['ModMass']).split(';')]
-            mod_starts = [int(s) for s in str(row['ModStart']).split(';')]
-            mod_ends = [int(s) for s in str(row['ModEnd']).split(';')]
+            mod_starts = [int(float(s)) for s in str(row['ModStart']).split(';')]
+            mod_ends = [int(float(s)) for s in str(row['ModEnd']).split(';')]
             mod_labels = [s[:-1].replace(',', '; ') for s in str(row['ModID']).split(';')]
         else:
             mod_masses = []
@@ -144,8 +144,8 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
     empty_row = pd.DataFrame(np.nan, index=[-1], columns=protein_df.columns)
     protein_df = pd.concat([protein_df, empty_row])
     protein_df.loc[-1,'index'] = -1
-    protein_df.loc[-1,'accession'] = 'unassigned'
-    protein_df.loc[-1,'description'] = 'unassigned'
+    protein_df.loc[-1,'accession'] = 'unassigned sequence tags'
+    protein_df.loc[-1,'description'] = 'unassigned sequence tags'
 
 
     components = []
