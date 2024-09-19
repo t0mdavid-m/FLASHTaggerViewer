@@ -1,3 +1,5 @@
+import json
+
 from src.common import *
 from src.masstable import *
 from src.components import *
@@ -11,7 +13,7 @@ from pyopenms import AASequence
 
 from src.sequence import remove_ambigious
 
-from itertools import repeat
+from os.path import join, isfile
 
 
 DEFAULT_LAYOUT = [
@@ -30,6 +32,20 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
     selected_deconv_file = selected_data.iloc[0]['Deconvolved Files']
     selected_tag_file = selected_data.iloc[0]['Tag Files']
     selected_db_file = selected_data.iloc[0]['Protein Files']
+
+    print(selected_tag_file)
+
+    settings_file = join(
+        st.session_state["workspace"],  'FLASHTaggerOutput',
+        selected_tag_file.split('_tagged.tsv')[0], 'settings_FLASHTnT.json'
+    )
+    fragments = ['b', 'y']
+    if isfile(settings_file):
+        with open(settings_file, 'r') as f:
+            tnt_settings = json.load(f)
+        if 'tnt:ex:ion_type' in tnt_settings:
+            fragments = tnt_settings['tnt:ex:ion_type']
+
 
     # getting data from mzML files
     spec_df = st.session_state['deconv_dfs_tagger'][selected_deconv_file]
@@ -72,7 +88,6 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
         }
     )
 
-    # protein_db = st.session_state['protein_db'][selected_db_file]
     protein_df = st.session_state['protein_dfs_tagger'][selected_db_file]
     protein_df['length'] = protein_df['DatabaseSequence'].apply(lambda x : len(x))
     protein_df = protein_df.rename(
@@ -226,6 +241,10 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
 
     # Set sequence data
     data_to_send['sequence_data'] = sequence_data
+    data_to_send['settings'] = {
+        'tolerance' : spec_df['tol'].to_numpy(dtype='float')[0],
+        'ion_types' : fragments
+    }
 
     flash_viewer_grid_component(components=components, data=data_to_send, component_key=grid_key)
 
@@ -247,8 +266,8 @@ def content():
     page_setup("TaggerViewer")
     #setSequenceViewInDefaultView()
     st.session_state['progress_bar_space'] = st.container()
-    input_types = ["deconv-mzMLs", "anno-mzMLs", "tags-tsv", "proteins-tsv"]
-    parsed_df_types = ["deconv_dfs_tagger", "anno_dfs_tagger", "tag_dfs_tagger", "protein_dfs_tagger"]
+    input_types = ["deconv-mzMLs", "anno-mzMLs", "tags-tsv", "proteins-tsv", "tntsettings-json"]
+    parsed_df_types = ["deconv_dfs_tagger", "anno_dfs_tagger", "tag_dfs_tagger", "protein_dfs_tagger", 'tntsettings-json']
     initializeWorkspace(input_types, parsed_df_types)
     parseUploadedFiles()
     showUploadedFilesTable()
