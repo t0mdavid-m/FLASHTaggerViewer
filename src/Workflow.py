@@ -25,36 +25,36 @@ class TagWorkflow(WorkflowManager):
         t = st.tabs(["MS data", "Database"])
         with t[0]:
             example_data = ['example-data/flashtagger/example_spectrum_%d.mzML' % n for n in [1, 2]]
-            # Use the upload method from StreamlitUI to handle mzML file uploads.
             self.ui.upload_widget(key="mzML-files", name="MS data", file_type="mzML", fallback=example_data)
         with t[1]:
-            # Example with fallback data (not used in workflow)
             self.ui.upload_widget(key="fasta-file", name="Database", file_type="fasta", enable_directory=False,
                                   fallback='example-data/flashtagger/example_database.fasta')
 
 
     def configure(self) -> None:
-        # Allow users to select mzML files for the analysis.
+        # Input File Selection
         self.ui.select_input_file("mzML-files", multiple=True)
         self.ui.select_input_file("fasta-file", multiple=False)
 
+        # Number of threads cannot be selected in online mode
         if 'local' in sys.argv:
             self.ui.input_widget(
                 'threads', name='threads', default=multiprocessing.cpu_count(),
                 help='The number of threads that should be used to run the tools.'
             )
 
+        # Decoy database size toggle
         self.ui.input_widget(
             'few_proteins', name='Do you expect <100 Proteins?', widget_type='checkbox', default=True,
             help='If set, the decoy database will be 10 times larger than the target database for better FDR estimation resolution. This increases the runtime significantly.'
         )
 
-        # Create tabs for different analysis steps.
+        # Create tabs for different analysis steps
         t = st.tabs(
             ["**FLASHDeconv**", "**FLASHTnT**"]
         )
         with t[0]:
-            # Parameters for FeatureFinderMetabo TOPP tool.
+            # FLASHDeconv Configuration
             self.ui.input_TOPP(
                 'FLASHDeconv',
                 exclude_parameters = [
@@ -67,17 +67,9 @@ class TagWorkflow(WorkflowManager):
                 display_subsections=True
             )
         with t[1]:
-            # Parameters for FeatureFinderMetabo TOPP tool.
-            self.ui.input_TOPP(
-                'FLASHTnT', 
-                #exclude_parameters = [
-                #    'min_mz', 'max_mz', 'min_rt', 'max_rt', 'max_ms_level',
-                #    'use_RNA_averagine', 'tol', 'min_mass', 'max_mass',
-                #    'min_charge', 'max_charge', 'precursor_charge',
-                #    'precursor_mz', 'min_cos', 'min_snr'
-                #],
-                display_subsections=True
-            )
+            # FLASHTnT Configuration
+            self.ui.input_TOPP('FLASHTnT', display_subsections=True)
+
 
     def pp(self) -> None:
 
@@ -301,26 +293,25 @@ class DeconvWorkflow(WorkflowManager):
 
 
     def upload(self)-> None:
-        # Use the upload method from StreamlitUI to handle mzML file uploads.
         self.ui.upload_widget(key="mzML-files", name="MS data", file_type="mzML",
                               fallback=['example-data/flashdeconv/example_fd.mzML'])
 
+
     def configure(self) -> None:
-        # Allow users to select mzML files for the analysis.
+        # Input File Selection
         self.ui.select_input_file("mzML-files", multiple=True)
 
+        # Number of threads cannot be selected in online mode
         if 'local' in sys.argv:
             self.ui.input_widget(
                 'threads', name='threads', default=multiprocessing.cpu_count(),
                 help='The number of threads that should be used to run the tools.'
             )
 
+
+        # FLASHDeconv Configuration
         self.ui.input_TOPP(
-            'FLASHDeconv',
-            exclude_parameters = [
-                'ida_log'
-            ],
-            display_subsections=True
+            'FLASHDeconv', exclude_parameters = ['ida_log'], display_subsections=True
         )
 
 
