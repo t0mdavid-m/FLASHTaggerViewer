@@ -183,6 +183,8 @@ def parsingWithProgressBar(infiles_deconv, infiles_anno, infiles_tag, infiles_pr
                     Path(st.session_state.workspace, tool, "tags-tsv", tag_f),
                     Path(st.session_state.workspace, tool, "proteins-tsv", protein_f)
                 )
+                # Add tolerance as a new columnn, wasteful but gets the job done..
+                spec_df['tol'] = tolerance
                 st.session_state['anno_dfs_tagger'][anno_f] = anno_df
                 st.session_state['deconv_dfs_tagger'][deconv_f] = spec_df
                 st.session_state['tag_dfs_tagger'][tag_f] = tag_df
