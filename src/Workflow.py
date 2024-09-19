@@ -262,7 +262,9 @@ class TagWorkflow(WorkflowManager):
             makedirs(folder_path)
 
             tagger_params = self.executor.parameter_manager.get_parameters_from_json()['FLASHTnT']
-            if ('Tagger:fdr' in tagger_params) and (tagger_params['Tagger:fdr'] < 1):
+
+            if ((tagger_params.get('tnt:prsm_fdr', 1) < 1) or (tagger_params.get('tnt:pro_fdr', 1) < 1)):
+
                 if self.executor.parameter_manager.get_parameters_from_json()['few_proteins']:
                     ratio = 10
                 else:
