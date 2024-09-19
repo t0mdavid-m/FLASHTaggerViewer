@@ -1,5 +1,6 @@
 import streamlit as st
 import multiprocessing
+import json
 import sys
 import time
 from .workflow.WorkflowManager import WorkflowManager
@@ -10,85 +11,6 @@ from os.path import join, splitext, basename, exists, dirname
 from os import makedirs
 from shutil import copyfile, rmtree
 from pathlib import Path
-
-class Workflow(WorkflowManager):
-    # Setup pages for upload, parameter, execution and results.
-    # For layout use any streamlit components such as tabs (as shown in example), columns, or even expanders.
-    def __init__(self) -> None:
-        # Initialize the parent class with the workflow name.
-        super().__init__("TOPP Workflow", st.session_state["workspace"])
-
-    def upload(self)-> None:
-        t = st.tabs(["MS data", "Example with fallback data"])
-        with t[0]:
-            # Use the upload method from StreamlitUI to handle mzML file uploads.
-            self.ui.upload_widget(key="mzML-files", name="MS data", file_type="mzML")
-        with t[1]:
-            # Example with fallback data (not used in workflow)
-            self.ui.upload_widget(key="image", file_type="png", fallback="assets/OpenMS.png")
-
-    def configure(self) -> None:
-        # Allow users to select mzML files for the analysis.
-        self.ui.select_input_file("mzML-files", multiple=True)
-
-        # Create tabs for different analysis steps.
-        t = st.tabs(
-            ["**Feature Detection**", "**Adduct Detection**", "**SIRIUS Export**", "**Python Custom Tool**"]
-        )
-        with t[0]:
-            # Parameters for FeatureFinderMetabo TOPP tool.
-            self.ui.input_TOPP("FeatureFinderMetabo")
-        with t[1]:
-            # A single checkbox widget for workflow logic.
-            self.ui.input_widget("run-adduct-detection", False, "Adduct Detection")
-            # Paramters for MetaboliteAdductDecharger TOPP tool.
-            self.ui.input_TOPP("MetaboliteAdductDecharger")
-        with t[2]:
-            # Paramters for SiriusExport TOPP tool
-            self.ui.input_TOPP("SiriusExport")
-        with t[3]:
-            # Generate input widgets for a custom Python tool, located at src/python-tools.
-            # Parameters are specified within the file in the DEFAULTS dictionary.
-            self.ui.input_python("example")
-
-    def execution(self) -> None:
-        # Get mzML input files from self.params.
-        # Can be done without file manager, however, it ensures everything is correct.
-        in_mzML = self.file_manager.get_files(self.params["mzML-files"])
-        
-        # Log any messages.
-        self.logger.log(f"Number of input mzML files: {len(in_mzML)}")
-
-        # Prepare output files for feature detection.
-        out_ffm = self.file_manager.get_files(in_mzML, "featureXML", "feature-detection")
-
-        # Run FeatureFinderMetabo tool with input and output files.
-        self.executor.run_topp(
-            "FeatureFinderMetabo", input_output={"in": in_mzML, "out": out_ffm}
-        )
-
-        # Check if adduct detection should be run.
-        if self.params["run-adduct-detection"]:
-        
-            # Run MetaboliteAdductDecharger for adduct detection, with disabled logs.
-            # Without a new file list for output, the input files will be overwritten in this case.
-            self.executor.run_topp(
-                "MetaboliteAdductDecharger", {"in": out_ffm, "out_fm": out_ffm}, write_log=False
-            )
-
-        # Example for a custom Python tool, which is located in src/python-tools.
-        self.executor.run_python("example", {"in": in_mzML})
-
-        # Prepare output file for SiriusExport.
-        out_se = self.file_manager.get_files("sirius.ms", set_results_dir="sirius-export")
-        self.executor.run_topp("SiriusExport", {"in": self.file_manager.get_files(in_mzML, collect=True),
-                                                "in_featureinfo": self.file_manager.get_files(out_ffm, collect=True),
-                                                "out": out_se})
-
-    def results(self) -> None:
-        st.warning("Not implemented yet.")
-
-
 
 
 class TagWorkflow(WorkflowManager):
@@ -103,36 +25,36 @@ class TagWorkflow(WorkflowManager):
         t = st.tabs(["MS data", "Database"])
         with t[0]:
             example_data = ['example-data/flashtagger/example_spectrum_%d.mzML' % n for n in [1, 2]]
-            # Use the upload method from StreamlitUI to handle mzML file uploads.
             self.ui.upload_widget(key="mzML-files", name="MS data", file_type="mzML", fallback=example_data)
         with t[1]:
-            # Example with fallback data (not used in workflow)
             self.ui.upload_widget(key="fasta-file", name="Database", file_type="fasta", enable_directory=False,
                                   fallback='example-data/flashtagger/example_database.fasta')
 
 
     def configure(self) -> None:
-        # Allow users to select mzML files for the analysis.
+        # Input File Selection
         self.ui.select_input_file("mzML-files", multiple=True)
         self.ui.select_input_file("fasta-file", multiple=False)
 
+        # Number of threads cannot be selected in online mode
         if 'local' in sys.argv:
             self.ui.input_widget(
                 'threads', name='threads', default=multiprocessing.cpu_count(),
                 help='The number of threads that should be used to run the tools.'
             )
 
+        # Decoy database size toggle
         self.ui.input_widget(
             'few_proteins', name='Do you expect <100 Proteins?', widget_type='checkbox', default=True,
             help='If set, the decoy database will be 10 times larger than the target database for better FDR estimation resolution. This increases the runtime significantly.'
         )
 
-        # Create tabs for different analysis steps.
+        # Create tabs for different analysis steps
         t = st.tabs(
             ["**FLASHDeconv**", "**FLASHTnT**"]
         )
         with t[0]:
-            # Parameters for FeatureFinderMetabo TOPP tool.
+            # FLASHDeconv Configuration
             self.ui.input_TOPP(
                 'FLASHDeconv',
                 exclude_parameters = [
@@ -145,17 +67,9 @@ class TagWorkflow(WorkflowManager):
                 display_subsections=True
             )
         with t[1]:
-            # Parameters for FeatureFinderMetabo TOPP tool.
-            self.ui.input_TOPP(
-                'FLASHTnT', 
-                #exclude_parameters = [
-                #    'min_mz', 'max_mz', 'min_rt', 'max_rt', 'max_ms_level',
-                #    'use_RNA_averagine', 'tol', 'min_mass', 'max_mass',
-                #    'min_charge', 'max_charge', 'precursor_charge',
-                #    'precursor_mz', 'min_cos', 'min_snr'
-                #],
-                display_subsections=True
-            )
+            # FLASHTnT Configuration
+            self.ui.input_TOPP('FLASHTnT', display_subsections=True)
+
 
     def pp(self) -> None:
 
@@ -262,7 +176,9 @@ class TagWorkflow(WorkflowManager):
             makedirs(folder_path)
 
             tagger_params = self.executor.parameter_manager.get_parameters_from_json()['FLASHTnT']
-            if ('Tagger:fdr' in tagger_params) and (tagger_params['Tagger:fdr'] < 1):
+
+            if ((tagger_params.get('tnt:prsm_fdr', 1) < 1) or (tagger_params.get('tnt:pro_fdr', 1) < 1)):
+
                 if self.executor.parameter_manager.get_parameters_from_json()['few_proteins']:
                     ratio = 10
                 else:
@@ -309,17 +225,24 @@ class TagWorkflow(WorkflowManager):
                 }
             )
 
-            uploaded_files.append(out_db)
-            uploaded_files.append(out_anno)
-            uploaded_files.append(out_deconv)
-            uploaded_files.append(out_tag)
-            uploaded_files.append(out_protein)
+            # uploaded_files.append(out_db)
+            # uploaded_files.append(out_anno)
+            # uploaded_files.append(out_deconv)
+            # uploaded_files.append(out_tag)
+            # uploaded_files.append(out_protein)
 
             copyfile(out_db, join(folder_path, 'database.fasta'))
             copyfile(out_anno, join(folder_path, 'annotated.mzML'))
             copyfile(out_deconv, join(folder_path, 'out.mzML'))
             copyfile(out_tag, join(folder_path, 'tags.tsv'))
             copyfile(out_protein, join(folder_path, 'proteins.tsv'))
+            
+            for tool in ['FLASHDeconv', 'FLASHTnT']:
+                with open(join(folder_path, f'settings_{tool}.json')):
+                    json.dump(
+                        self.executor.parameter_manager.get_parameters_from_json()[tool],
+                        indent='\t'
+                    )
 
 
         # make directory to store deconv and anno mzML files & initialize data storage
@@ -370,26 +293,25 @@ class DeconvWorkflow(WorkflowManager):
 
 
     def upload(self)-> None:
-        # Use the upload method from StreamlitUI to handle mzML file uploads.
         self.ui.upload_widget(key="mzML-files", name="MS data", file_type="mzML",
                               fallback=['example-data/flashdeconv/example_fd.mzML'])
 
+
     def configure(self) -> None:
-        # Allow users to select mzML files for the analysis.
+        # Input File Selection
         self.ui.select_input_file("mzML-files", multiple=True)
 
+        # Number of threads cannot be selected in online mode
         if 'local' in sys.argv:
             self.ui.input_widget(
                 'threads', name='threads', default=multiprocessing.cpu_count(),
                 help='The number of threads that should be used to run the tools.'
             )
 
+
+        # FLASHDeconv Configuration
         self.ui.input_TOPP(
-            'FLASHDeconv',
-            exclude_parameters = [
-                'ida_log'
-            ],
-            display_subsections=True
+            'FLASHDeconv', exclude_parameters = ['ida_log'], display_subsections=True
         )
 
 
