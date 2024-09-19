@@ -71,51 +71,6 @@ class TagWorkflow(WorkflowManager):
             self.ui.input_TOPP('FLASHTnT', display_subsections=True)
 
 
-    def pp(self) -> None:
-
-        if 'selected_experiment0_tagger' in st.session_state:
-            del(st.session_state['selected_experiment0_tagger'])
-        if "saved_layout_setting_tagger" in st.session_state and len(st.session_state["saved_layout_setting_tagger"]) > 1:
-            for exp_index in range(1, len(st.session_state["saved_layout_setting_tagger"])):
-                if f"selected_experiment{exp_index}_tagger" in st.session_state:
-                    del(st.session_state[f"selected_experiment{exp_index}_tagger"])
-
-        st.session_state['progress_bar_space'] = st.container()
-        
-        try:
-            in_mzMLs = self.file_manager.get_files(self.params["mzML-files"])
-        except:
-            st.error('Please select at least one mzML file.')
-            return
-
-        base_path = dirname(self.workflow_dir)
-
-        uploaded_files = []
-        for in_mzML in in_mzMLs:
-            current_base = splitext(basename(in_mzML))[0]
-            current_time = time.strftime("%Y%m%d-%H%M%S")
-
-            #out_db = join(base_path, 'db-fasta', f'{current_base}_db.fasta')
-            out_anno = join(base_path, self.tool_name, 'anno-mzMLs', f'{current_base}_{current_time}_annotated.mzML')
-            out_deconv = join(base_path, self.tool_name, 'deconv-mzMLs', f'{current_base}_{current_time}_deconv.mzML')
-            out_tag = join(base_path, self.tool_name, 'tags-tsv', f'{current_base}_{current_time}_tagged.tsv')
-            out_protein = join(base_path, self.tool_name, 'proteins-tsv', f'{current_base}_{current_time}_protein.tsv')
-
-            if not exists(out_tag):
-                continue
-
-            #uploaded_files.append(out_db)
-            uploaded_files.append(out_anno)
-            uploaded_files.append(out_deconv)
-            uploaded_files.append(out_tag)
-            uploaded_files.append(out_protein)
-
-
-        # make directory to store deconv and anno mzML files & initialize data storage
-        postprocessingAfterUpload_Tagger(uploaded_files)
-
-
-    
     def execution(self) -> None:
         # Get mzML input files from self.params.
         # Can be done without file manager, however, it ensures everything is correct.
@@ -238,9 +193,9 @@ class TagWorkflow(WorkflowManager):
             copyfile(out_protein, join(folder_path, 'proteins.tsv'))
             
             for tool in ['FLASHDeconv', 'FLASHTnT']:
-                with open(join(folder_path, f'settings_{tool}.json')):
+                with open(join(folder_path, f'settings_{tool}.json'), 'w') as f:
                     json.dump(
-                        self.executor.parameter_manager.get_parameters_from_json()[tool],
+                        self.executor.parameter_manager.get_parameters_from_json()[tool], f,
                         indent='\t'
                     )
 
@@ -314,46 +269,6 @@ class DeconvWorkflow(WorkflowManager):
             'FLASHDeconv', exclude_parameters = ['ida_log'], display_subsections=True
         )
 
-
-    def pp(self) -> None:
-
-        if 'selected_experiment0' in st.session_state:
-            del(st.session_state['selected_experiment0'])
-        if "saved_layout_setting" in st.session_state and len(st.session_state["saved_layout_setting"]) > 1:
-            for exp_index in range(1, len(st.session_state["saved_layout_setting"])):
-                if f"selected_experiment{exp_index}" in st.session_state:
-                    del(st.session_state[f"selected_experiment{exp_index}"])
-
-        st.session_state['progress_bar_space'] = st.container()
-
-        try:
-            in_mzMLs = self.file_manager.get_files(self.params["mzML-files"])
-        except:
-            st.error('Please select at least one mzML file.')
-            return
-
-        base_path = dirname(self.workflow_dir)
-
-        uploaded_files = []
-        for in_mzML in in_mzMLs:
-            current_base = splitext(basename(in_mzML))[0]
-            current_time = time.strftime("%Y%m%d-%H%M%S")
-
-            out_anno = Path(join(base_path, self.tool_name, 'anno-mzMLs', f'{current_base}_{current_time}_annotated.mzML'))
-            out_deconv = Path(join(base_path, self.tool_name, 'deconv-mzMLs', f'{current_base}_{current_time}_deconv.mzML'))
-
-            uploaded_files.append(out_anno)
-            uploaded_files.append(out_deconv)
-            
-            if  'deconv-mzMLs' not in st.session_state:
-                st.session_state['deconv-mzMLs'] = []
-            if  'anno-mzMLs' not in st.session_state:
-                st.session_state['anno-mzMLs'] = []
-            st.session_state['deconv-mzMLs'].append(out_deconv.name)
-            st.session_state['anno-mzMLs'].append(out_anno.name)
-
-        # make directory to store deconv and anno mzML files & initialize data storage
-        postprocessingAfterUpload_FD(uploaded_files)
 
     def execution(self) -> None:
         # Get mzML input files from self.params.
