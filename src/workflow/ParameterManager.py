@@ -1,4 +1,5 @@
 import pyopenms as poms
+import os
 import json
 import shutil
 import streamlit as st
@@ -50,12 +51,19 @@ class ParameterManager:
         # for each TOPP tool, open the ini file
         for tool in current_topp_tools:
             json_params[tool] = {}
+            if os.path.isfile(self.params_file):
+                with open(self.params_file, "r") as f:
+                    file_params = json.load(f)
+                if tool in file_params:
+                    json_params[tool] = file_params[tool]            
             # load the param object
             param = poms.Param()
             poms.ParamXMLFile().load(str(Path(self.ini_dir, f"{tool}.ini")), param)
             # get all session state param keys and values for this tool
+            print('xxxxx')
             for key, value in st.session_state.items():
                 if key.startswith(f"{self.topp_param_prefix}{tool}:1:"):
+                    print(key, value)
                     # get ini_key
                     ini_key = key.replace(self.topp_param_prefix, "").encode()
                     # get ini (default) value by ini_key
@@ -75,7 +83,7 @@ class ParameterManager:
                                 cast_type = str
                             value = [cast_type(v) for v in value.split("\n")]
                     # check if value is different from default
-                    if ini_value != value:
+                    if (ini_value != value) or (json_params[tool].get(key.split(":1:")[1], value) != value):
                         # store non-default value
                         json_params[tool][key.split(":1:")[1]] = value
         # Save to json file

@@ -7,6 +7,7 @@ from src.masstable import getMSSignalDF, getSpectraTableDF
 from src.components import PlotlyHeatmap, PlotlyLineplot, Plotly3Dplot, Tabulator, SequenceView, InternalFragmentMap, \
                            FlashViewerComponent, flash_viewer_grid_component
 from src.sequence import getFragmentDataFromSeq, getInternalFragmentDataFromSeq
+from pages.FileUpload import initializeWorkspace, parseUploadedFiles, getUploadedFileDF
 
 
 DEFAULT_LAYOUT = [['ms1_deconv_heat_map'], ['scan_table', 'mass_table'],
@@ -118,6 +119,17 @@ if __name__ == '__main__':
 
     st.title("FLASHViewer")
     setSequenceViewInDefaultView()
+
+    # Parse previously uploaded files
+    input_file_types = ["deconv-mzMLs", "anno-mzMLs", "tsv-files"]
+    parsed_df_types = ["deconv_dfs", "anno_dfs", "parsed_tsv_files"]
+    initializeWorkspace(input_file_types, parsed_df_types)
+    st.session_state['progress_bar_space'] = st.container()
+    parseUploadedFiles()
+
+    deconv_files = sorted(st.session_state["deconv_dfs"].keys())
+    anno_files = sorted(st.session_state["anno_dfs"].keys())
+    st.session_state["experiment-df"] = getUploadedFileDF(deconv_files, anno_files)
 
     ### if no input file is given, show blank page
     if "experiment-df" not in st.session_state:
