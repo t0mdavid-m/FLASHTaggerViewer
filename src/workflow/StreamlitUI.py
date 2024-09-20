@@ -825,7 +825,12 @@ class StreamlitUI:
             self.zip_and_download_files(Path(self.workflow_dir, "input-files"))
 
     def parameter_section(self, custom_paramter_function) -> None:
-        st.toggle("Show advanced parameters", value=False, key="advanced")
+        if "advanced" not in st.session_state:
+            st.session_state["advanced"] = False
+        def toggle_advanced():
+            self.parameter_manager.save_parameters()
+            st.session_state["advanced"] = not st.session_state["advanced"]
+        st.toggle("Show advanced parameters", value=st.session_state["advanced"], on_change=toggle_advanced)
 
         form = st.form(
             key=f"{self.workflow_dir.stem}-input-form",
