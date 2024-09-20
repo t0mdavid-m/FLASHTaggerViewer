@@ -73,7 +73,7 @@ class TagWorkflow(WorkflowManager):
     def execution(self) -> None:
         # Get input files
         try:      
-            in_mzMLs = self.file_manager.get_files(self.params["mzML-files"])
+            in_mzmls = self.file_manager.get_files(self.params["mzML-files"])
         except ValueError:
             st.error('Please select at least one mzML file.')  
             return
@@ -103,10 +103,10 @@ class TagWorkflow(WorkflowManager):
             threads = DEFAULT_THREADS
 
         # Process files in sequence
-        for in_mzML in in_mzMLs:
+        for in_mzml in in_mzmls:
             
             # Generate output folder
-            current_base = splitext(basename(in_mzML))[0]
+            current_base = splitext(basename(in_mzml))[0]
             current_time = time.strftime("%Y%m%d-%H%M%S")
             folder_path = join(base_path, 'FLASHTaggerOutput', '%s_%s'%(current_base, current_time))
             if exists(folder_path):
@@ -119,6 +119,19 @@ class TagWorkflow(WorkflowManager):
             out_deconv = join(base_path, self.tool_name, 'deconv-mzMLs', f'{current_base}_{current_time}_deconv.mzML')
             out_tag = join(base_path, self.tool_name, 'tags-tsv', f'{current_base}_{current_time}_tagged.tsv')
             out_protein = join(base_path, self.tool_name, 'proteins-tsv', f'{current_base}_{current_time}_protein.tsv')
+
+            # Additional outputs are directly written to download folder
+            out_tsv = join(folder_path, f'out.tsv')
+            out_spec1 = join(folder_path, f'spec1.tsv')
+            out_spec2 = join(folder_path, f'spec2.tsv')
+            out_spec3 = join(folder_path, f'spec3.tsv')
+            out_spec4 = join(folder_path, f'spec4.tsv')
+            out_quant = join(folder_path, f'quant.tsv')
+            out_msalign1 = join(folder_path, f'toppic_ms1.msalign')
+            out_msalign2 = join(folder_path, f'toppic_ms2.msalign')
+            out_feature1 = join(folder_path, f'toppic_ms1.feature')
+            out_feature2 = join(folder_path, f'toppic_ms2.feature')
+            out_prsm = join(folder_path, f'prsms.tsv')
 
             # Check if a decoy database needs to be generated
             tagger_params = self.executor.parameter_manager.get_parameters_from_json()['FLASHTnT']
@@ -150,10 +163,19 @@ class TagWorkflow(WorkflowManager):
             self.executor.run_topp(
                 'FLASHDeconv',
                 input_output={
-                    'in' : [in_mzML],
-                    'out' : ['_.tsv'],
-                    'out_annotated_mzml' :  [out_anno],
-                    'out_mzml' :  [out_deconv],
+                    'in' : [in_mzml],
+                    'out' : [out_tsv],
+                    'out_spec1' : [out_spec1],
+                    'out_spec2' : [out_spec2],
+                    'out_spec3' : [out_spec3],
+                    'out_spec4' : [out_spec4],
+                    'out_mzml' : [out_deconv],
+                    'out_quant' : [out_quant],
+                    'out_annotated_mzml' : [out_anno],
+                    'out_msalign1' : [out_msalign1],
+                    'out_msalign2' : [out_msalign2],
+                    'out_feature1' : [out_feature1],
+                    'out_feature2' : [out_feature2],
                 },
                 params_manual = {
                     'threads' : threads
@@ -168,7 +190,7 @@ class TagWorkflow(WorkflowManager):
                     'fasta' : [out_db],
                     'out_tag' :  [out_tag],
                     'out_pro' :  [out_protein],
-                    'out_prsm' : ['_.tsv']
+                    'out_prsm' : [out_prsm]
                 },
                 params_manual = {
                     'threads' : threads
@@ -226,7 +248,7 @@ class DeconvWorkflow(WorkflowManager):
     def execution(self) -> None:
         # Get input files
         try:      
-            in_mzMLs = self.file_manager.get_files(self.params["mzML-files"])
+            in_mzmls = self.file_manager.get_files(self.params["mzML-files"])
         except ValueError:
             st.error('Please select at least one mzML file.')  
             return
@@ -247,10 +269,10 @@ class DeconvWorkflow(WorkflowManager):
             threads = DEFAULT_THREADS
 
         # Process files in sequence
-        for in_mzML in in_mzMLs:
+        for in_mzml in in_mzmls:
 
             # Generate output folder
-            current_base = splitext(basename(in_mzML))[0]
+            current_base = splitext(basename(in_mzml))[0]
             current_time = time.strftime("%Y%m%d-%H%M%S")
             folder_path = join(base_path, 'FLASHDeconvOutput', '%s_%s'%(current_base, current_time))
             if exists(folder_path):
@@ -259,8 +281,8 @@ class DeconvWorkflow(WorkflowManager):
 
             # Define output paths for viewer
             out_tsv = join(base_path, self.tool_name, 'tsv-files', f'{current_base}_{current_time}.tsv')
-            out_mzml = join(base_path, self.tool_name, 'deconv-mzMLs', f'{current_base}_{current_time}_deconv.mzML')
-            out_annotated_mzml = join(base_path, self.tool_name, 'anno-mzMLs', f'{current_base}_{current_time}_annotated.mzML')
+            out_deconv = join(base_path, self.tool_name, 'deconv-mzMLs', f'{current_base}_{current_time}_deconv.mzML')
+            out_anno = join(base_path, self.tool_name, 'anno-mzMLs', f'{current_base}_{current_time}_annotated.mzML')
 
             # Additional outputs are directly written to download folder
             out_spec1 = join(folder_path, f'spec1.tsv')
@@ -277,15 +299,15 @@ class DeconvWorkflow(WorkflowManager):
             self.executor.run_topp(
                 'FLASHDeconv',
                 input_output={
-                    'in' : [in_mzML],
+                    'in' : [in_mzml],
                     'out' : [out_tsv],
                     'out_spec1' : [out_spec1],
                     'out_spec2' : [out_spec2],
                     'out_spec3' : [out_spec3],
                     'out_spec4' : [out_spec4],
-                    'out_mzml' : [out_mzml],
+                    'out_mzml' : [out_deconv],
                     'out_quant' : [out_quant],
-                    'out_annotated_mzml' : [out_annotated_mzml],
+                    'out_annotated_mzml' : [out_anno],
                     'out_msalign1' : [out_msalign1],
                     'out_msalign2' : [out_msalign2],
                     'out_feature1' : [out_feature1],
@@ -297,8 +319,8 @@ class DeconvWorkflow(WorkflowManager):
             )
 
             # Copy generated files to output            
-            copyfile(out_mzml, join(folder_path, f'out_deconv.mzML'))
-            copyfile(out_annotated_mzml, join(folder_path, f'anno_annotated.mzML'))
+            copyfile(out_deconv, join(folder_path, f'out_deconv.mzML'))
+            copyfile(out_anno, join(folder_path, f'anno_annotated.mzML'))
             copyfile(out_tsv, join(folder_path, f'out.tsv'))
             
             # Store settings
