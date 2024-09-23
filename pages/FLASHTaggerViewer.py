@@ -125,7 +125,11 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
             mod_masses = [float(m) for m in str(row['ModMass']).split(';')]
             mod_starts = [int(float(s)) for s in str(row['ModStart']).split(';')]
             mod_ends = [int(float(s)) for s in str(row['ModEnd']).split(';')]
-            mod_labels = [s[:-1].replace(',', '; ') for s in str(row['ModID']).split(';')]
+            if pd.isna(row['ModID']):
+                mod_labels = [''] * row['ModCount']
+            else:
+                mod_labels = [s[:-1].replace(',', '; ') for s in str(row['ModID']).split(';')]
+            print(mod_labels)
         else:
             mod_masses = []
             mod_starts = []
@@ -142,13 +146,13 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
         )
 
         sequence_data[pid]['sequence'] = list(sequence)
-        sequence_data[pid]['proteoform_start'] = start_index
-        sequence_data[pid]['proteoform_end'] = end_index
+        sequence_data[pid]['proteoform_start'] = proteoform_start - 1
+        sequence_data[pid]['proteoform_end'] = proteoform_end - 1
         sequence_data[pid]['computed_mass'] = row['ProteoformMass']
         sequence_data[pid]['theoretical_mass'] = remove_ambigious(AASequence.fromString(sequence)).getMonoWeight()
-
         sequence_data[pid]['modifications'] = [
             {
+                # Modfications are zero based
                 'start' : s - 1,
                 'end' : e - 1,
                 'mass_diff' : m,
