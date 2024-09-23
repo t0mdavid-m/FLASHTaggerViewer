@@ -153,6 +153,7 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
 
         sequence_data[pid]['modifications'] = [
             {
+                # Modfications are zero based
                 'start' : s - 1,
                 'end' : e - 1,
                 'mass_diff' : m,
