@@ -146,11 +146,10 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
         )
 
         sequence_data[pid]['sequence'] = list(sequence)
-        sequence_data[pid]['proteoform_start'] = start_index
-        sequence_data[pid]['proteoform_end'] = end_index
+        sequence_data[pid]['proteoform_start'] = proteoform_start - 1
+        sequence_data[pid]['proteoform_end'] = proteoform_end - 1
         sequence_data[pid]['computed_mass'] = row['ProteoformMass']
         sequence_data[pid]['theoretical_mass'] = remove_ambigious(AASequence.fromString(sequence)).getMonoWeight()
-
         sequence_data[pid]['modifications'] = [
             {
                 # Modfications are zero based
