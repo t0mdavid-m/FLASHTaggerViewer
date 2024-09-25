@@ -5,6 +5,8 @@ on:
     branches: ["develop", "deploy"]
   pull_request:
     branches: ["develop", "deploy"]
+  release:
+    types: [published]
 
 # Define needed TOPP tools here
 env:
