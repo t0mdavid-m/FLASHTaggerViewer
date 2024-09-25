@@ -33,8 +33,6 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
     selected_tag_file = selected_data.iloc[0]['Tag Files']
     selected_db_file = selected_data.iloc[0]['Protein Files']
 
-    print(selected_tag_file)
-
     settings_file = join(
         st.session_state["workspace"],  'FLASHTaggerOutput',
         selected_tag_file.split('_tagged.tsv')[0], 'settings_FLASHTnT.json'
@@ -129,7 +127,6 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
                 mod_labels = [''] * row['ModCount']
             else:
                 mod_labels = [s[:-1].replace(',', '; ') for s in str(row['ModID']).split(';')]
-            print(mod_labels)
         else:
             mod_masses = []
             mod_starts = []

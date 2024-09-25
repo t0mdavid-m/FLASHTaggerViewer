@@ -289,6 +289,7 @@ jobs:
         path: OpenMS-App.zip
 
     - name: Upload artifact as release asset
+      if: ${{ github.event_name == 'release' }}
       id: upload-release
       uses: actions/upload-release-asset@v1
       with:
@@ -296,3 +297,5 @@ jobs:
         asset_path: OpenMS-App.zip
         asset_name: OpenMS-App.zip
         asset_content_type: application/zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
