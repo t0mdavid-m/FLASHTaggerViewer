@@ -32,10 +32,13 @@ ARG OPENMS_BRANCH=TaggerViewerDeployment
 ARG PORT=8501
 # GitHub token to download latest OpenMS executable for Windows from Github action artifact.
 ARG GITHUB_TOKEN
+ENV GH_TOKEN=${GITHUB_TOKEN}
 # Streamlit app Gihub user name (to download artifact from).
 ARG GITHUB_USER=t0mdavid-m
 # Streamlit app Gihub repository name (to download artifact from).
-ARG GITHUB_REPO=FLASHTaggerViewer 
+ARG GITHUB_REPO=FLASHViewer 
+# Name of the zip file containing the windows executable
+ARG ASSET_NAME=OpenMS-App.zip
 
 
 USER root
@@ -51,6 +54,15 @@ RUN apt-get install -y --no-install-recommends --no-install-suggests libboost-da
                                                                      libboost-math1.74-dev \
                                                                      libboost-random1.74-dev
 RUN apt-get install -y --no-install-recommends --no-install-suggests qtbase5-dev libqt5svg5-dev libqt5opengl5-dev
+
+# Install Github CLI
+RUN (type -p wget >/dev/null || (sudo apt update && sudo apt-get install wget -y)) \
+	&& sudo mkdir -p -m 755 /etc/apt/keyrings \
+	&& wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+	&& sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+	&& echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+	&& sudo apt update \
+	&& sudo apt install gh -y
 
 # Download and install mamba.
 ENV PATH="/root/mambaforge/bin:${PATH}"
@@ -149,13 +161,13 @@ RUN echo "mamba run --no-capture-output -n streamlit-env streamlit run app.py" >
 # make the script executable
 RUN chmod +x /app/entrypoint.sh
 
-
-ARG GITHUB_REPO=FLASHViewer
 # Download latest OpenMS App executable for Windows from Github actions workflow.
-RUN WORKFLOW_ID=$(curl -s "https://api.github.com/repos/$GITHUB_USER/$GITHUB_REPO/actions/workflows" | jq -r '.workflows[] | select(.name == "Build executable for Windows") | .id') \
-    && SUCCESSFUL_RUNS=$(curl -s "https://api.github.com/repos/$GITHUB_USER/$GITHUB_REPO/actions/runs?workflow_id=$WORKFLOW_ID&status=success" | jq -r '.workflow_runs[0].id') \
-    && ARTIFACT_ID=$(curl -s "https://api.github.com/repos/$GITHUB_USER/$GITHUB_REPO/actions/runs/$SUCCESSFUL_RUNS/artifacts" | jq -r '.artifacts[] | select(.name == "OpenMS-App") | .id') \
-    && curl -LJO -H "Authorization: Bearer $GITHUB_TOKEN" "https://api.github.com/repos/$GITHUB_USER/$GITHUB_REPO/actions/artifacts/$ARTIFACT_ID/zip" -o /app/OpenMS-App
+RUN gh release download --repo ${GITHUB_USER}/${GITHUB_REPO} --pattern "${ASSET_NAME}" --dir /app
+
+# Extract the inner zip file and keep it
+RUN unzip /app/${ASSET_NAME} "${ASSET_NAME}" -d /app/temp_unzip && \
+    mv /app/temp_unzip/${ASSET_NAME} /app/ && \
+    rm -rf /app/temp_unzip
 
 # Run app as container entrypoint.
 EXPOSE $PORT
