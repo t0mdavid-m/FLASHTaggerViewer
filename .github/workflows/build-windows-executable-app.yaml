@@ -297,3 +297,5 @@ jobs:
         asset_path: OpenMS-App.zip
         asset_name: OpenMS-App.zip
         asset_content_type: application/zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
