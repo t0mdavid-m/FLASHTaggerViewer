@@ -287,3 +287,12 @@ jobs:
       with:
         name: OpenMS-App
         path: OpenMS-App.zip
+
+    - name: Upload artifact as release asset
+      id: upload-release
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: OpenMS-App.zip
+        asset_name: OpenMS-App.zip
+        asset_content_type: application/zip
