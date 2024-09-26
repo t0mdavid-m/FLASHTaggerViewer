@@ -60,10 +60,8 @@ class ParameterManager:
             param = poms.Param()
             poms.ParamXMLFile().load(str(Path(self.ini_dir, f"{tool}.ini")), param)
             # get all session state param keys and values for this tool
-            print('xxxxx')
             for key, value in st.session_state.items():
                 if key.startswith(f"{self.topp_param_prefix}{tool}:1:"):
-                    print(key, value)
                     # get ini_key
                     ini_key = key.replace(self.topp_param_prefix, "").encode()
                     # get ini (default) value by ini_key
