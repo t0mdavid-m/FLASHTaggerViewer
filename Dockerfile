@@ -148,6 +148,7 @@ COPY app.py /app/app.py
 COPY src/ /app/src
 COPY assets/ /app/assets
 COPY example-data/ /app/example-data
+COPY .streamlit/ /app/.streamlit
 COPY pages/ /app/pages
 COPY clean-up-workspaces.py /app/clean-up-workspaces.py
 
