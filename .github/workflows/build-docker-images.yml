@@ -2,9 +2,9 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "main", "TaggerViewerDeploy"]
+    branches: [ "main", "develop", "deploy"]
   pull_request:
-    branches: [ "main", "TaggerViewerDeploy"]
+    branches: [ "main", "develop", "deploy"]
 
 jobs:
 
