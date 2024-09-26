@@ -13,7 +13,7 @@ FROM node:21 AS js-build
 
 # JS Component
 ARG VUE_REPO=https://github.com/t0mdavid-m/openms-streamlit-vue-component.git
-ARG VUE_BRANCH=TaggerViewer
+ARG VUE_BRANCH=FVdeploy
 
 ADD https://api.github.com/repos/t0mdavid-m/openms-streamlit-vue-component/git/refs/heads/$VUE_BRANCH version.json
 
@@ -28,7 +28,7 @@ WORKDIR /
 COPY --from=js-build openms-streamlit-vue-component/dist /app/js-component/dist
 
 ARG OPENMS_REPO=https://github.com/t0mdavid-m/OpenMS.git
-ARG OPENMS_BRANCH=TaggerViewerDeployment
+ARG OPENMS_BRANCH=FVdeploy
 ARG PORT=8501
 # GitHub token to download latest OpenMS executable for Windows from Github action artifact.
 ARG GITHUB_TOKEN
@@ -56,13 +56,13 @@ RUN apt-get install -y --no-install-recommends --no-install-suggests libboost-da
 RUN apt-get install -y --no-install-recommends --no-install-suggests qtbase5-dev libqt5svg5-dev libqt5opengl5-dev
 
 # Install Github CLI
-RUN (type -p wget >/dev/null || (sudo apt update && sudo apt-get install wget -y)) \
-	&& sudo mkdir -p -m 755 /etc/apt/keyrings \
-	&& wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
-	&& sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
-	&& echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-	&& sudo apt update \
-	&& sudo apt install gh -y
+RUN (type -p wget >/dev/null || (apt-get update && apt-get install wget -y)) \
+	&& mkdir -p -m 755 /etc/apt/keyrings \
+	&& wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg | tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+	&& chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+	&& echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+	&& apt-get update \
+	&& apt-get install gh -y
 
 # Download and install mamba.
 ENV PATH="/root/mambaforge/bin:${PATH}"
@@ -148,6 +148,7 @@ COPY app.py /app/app.py
 COPY src/ /app/src
 COPY assets/ /app/assets
 COPY example-data/ /app/example-data
+COPY .streamlit/ /app/.streamlit
 COPY pages/ /app/pages
 COPY clean-up-workspaces.py /app/clean-up-workspaces.py
 
@@ -162,12 +163,12 @@ RUN echo "mamba run --no-capture-output -n streamlit-env streamlit run app.py" >
 RUN chmod +x /app/entrypoint.sh
 
 # Download latest OpenMS App executable for Windows from Github actions workflow.
-RUN gh release download --repo ${GITHUB_USER}/${GITHUB_REPO} --pattern "${ASSET_NAME}" --dir /app
-
-# Extract the inner zip file and keep it
-RUN unzip /app/${ASSET_NAME} "${ASSET_NAME}" -d /app/temp_unzip && \
-    mv /app/temp_unzip/${ASSET_NAME} /app/ && \
-    rm -rf /app/temp_unzip
+RUN if [ -n "$GH_TOKEN" ]; then \
+        echo "GH_TOKEN is set, proceeding to download the release asset..."; \
+        gh release download --repo ${GITHUB_USER}/${GITHUB_REPO} --pattern "${ASSET_NAME}" --dir /app; \
+    else \
+        echo "GH_TOKEN is not set, skipping the release asset download."; \
+    fi
 
 # Run app as container entrypoint.
 EXPOSE $PORT
