@@ -163,7 +163,12 @@ RUN echo "mamba run --no-capture-output -n streamlit-env streamlit run app.py" >
 RUN chmod +x /app/entrypoint.sh
 
 # Download latest OpenMS App executable for Windows from Github actions workflow.
-RUN gh release download --repo ${GITHUB_USER}/${GITHUB_REPO} --pattern "${ASSET_NAME}" --dir /app
+RUN if [ -n "$GH_TOKEN" ]; then \
+        echo "GH_TOKEN is set, proceeding to download the release asset..."; \
+        gh release download --repo ${GITHUB_USER}/${GITHUB_REPO} --pattern "${ASSET_NAME}" --dir /app; \
+    else \
+        echo "GH_TOKEN is not set, skipping the release asset download."; \
+    fi
 
 # Run app as container entrypoint.
 EXPOSE $PORT
