@@ -74,7 +74,6 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
     tag_df = pd.read_csv(tsv_buffer, sep='\t')
 
     # Complete df
-    tag_df['Scan'] = 0
     tag_df['StartPosition'] = tag_df['StartPosition'] - 1
     tag_df['EndPos'] = tag_df['StartPosition'] + tag_df['Length'] - 1
     tag_df = tag_df.rename(
