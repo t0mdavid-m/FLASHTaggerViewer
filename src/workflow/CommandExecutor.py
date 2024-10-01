@@ -183,6 +183,8 @@ class CommandExecutor:
                         command += [str(v_v) for v_v in v]
                     elif str(v) == 'true':
                         command += [f"-{k}"]
+                    elif str(v) == 'false':
+                        continue
                     else:
                         command += [f"-{k}", str(v)]
             commands.append(command)
