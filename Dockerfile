@@ -65,11 +65,11 @@ RUN (type -p wget >/dev/null || (apt-get update && apt-get install wget -y)) \
 	&& apt-get install gh -y
 
 # Download and install mamba.
-ENV PATH="/root/mambaforge/bin:${PATH}"
+ENV PATH="/root/miniforge3/bin:${PATH}"
 RUN wget -q \
-    https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh \
-    && bash Mambaforge-Linux-x86_64.sh -b \
-    && rm -f Mambaforge-Linux-x86_64.sh
+    https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh \
+    && bash Miniforge3-Linux-x86_64.sh -b \
+    && rm -f Miniforge3-Linux-x86_64.sh
 RUN mamba --version
 
 # Setup mamba environment.
@@ -153,7 +153,7 @@ COPY pages/ /app/pages
 COPY clean-up-workspaces.py /app/clean-up-workspaces.py
 
 # add cron job to the crontab
-RUN echo "0 3 * * * /root/mambaforge/envs/streamlit-env/bin/python /app/clean-up-workspaces.py >> /app/clean-up-workspaces.log 2>&1" | crontab -
+RUN echo "0 3 * * * /root/miniforge3/envs/streamlit-env/bin/python /app/clean-up-workspaces.py >> /app/clean-up-workspaces.log 2>&1" | crontab -
 
 # create entrypoint script to start cron service and launch streamlit app
 RUN echo "#!/bin/bash" > /app/entrypoint.sh
