@@ -67,7 +67,7 @@ RUN (type -p wget >/dev/null || (apt-get update && apt-get install wget -y)) \
 # Download and install mamba.
 ENV PATH="/root/mambaforge/bin:${PATH}"
 RUN wget -q \
-    https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh \
+    https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge-Linux-x86_64.sh \
     && bash Mambaforge-Linux-x86_64.sh -b \
     && rm -f Mambaforge-Linux-x86_64.sh
 RUN mamba --version
