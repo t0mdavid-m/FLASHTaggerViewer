@@ -237,7 +237,9 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
                 continue
 
             dfs.append(tmp_df)
-        data_to_send['per_scan_data'] = pd.concat(dfs, axis=1)
+        combined_dfs = pd.concat(dfs, axis=1)
+        combined_dfs = combined_dfs[np.isin(combined_dfs['Scan'], protein_df['Scan'])]
+        data_to_send['per_scan_data'] = combined_dfs
 
     # Set sequence data
     data_to_send['sequence_data'] = sequence_data
