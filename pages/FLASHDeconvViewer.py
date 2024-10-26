@@ -5,13 +5,13 @@ import pandas as pd
 from src.common import page_setup, save_params
 from src.masstable import getMSSignalDF, getSpectraTableDF
 from src.components import PlotlyHeatmap, PlotlyLineplot, Plotly3Dplot, Tabulator, SequenceView, InternalFragmentMap, \
-                           FlashViewerComponent, flash_viewer_grid_component
+    FlashViewerComponent, flash_viewer_grid_component, FDRPlotly
 from src.sequence import getFragmentDataFromSeq, getInternalFragmentDataFromSeq
 from pages.FileUpload import initializeWorkspace, parseUploadedFiles, getUploadedFileDF
 
 
 DEFAULT_LAYOUT = [['ms1_deconv_heat_map'], ['scan_table', 'mass_table'],
-                  ['anno_spectrum', 'deconv_spectrum'], ['3D_SN_plot']]
+                  ['anno_spectrum', 'deconv_spectrum'], ['3D_SN_plot'], ['fdr_plot']]
 
 
 def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid'):
@@ -25,7 +25,7 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
 
     components = []
     data_to_send = {}
-    per_scan_contents = {'mass_table': False, 'anno_spec': False, 'deconv_spec': False, '3d': False}
+    per_scan_contents = {'mass_table': False, 'anno_spec': False, 'deconv_spec': False, '3d': False,'fdr_plot': False}
     for row in layout_info_per_exp:
         components_of_this_row = []
         for col_index, comp_name in enumerate(row):
@@ -59,11 +59,20 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
             elif comp_name == 'internal_fragment_map':
                 data_to_send['internal_fragment_data'] = getInternalFragmentDataFromSeq(st.session_state.input_sequence)
                 component_arguments = InternalFragmentMap()
+            elif comp_name == 'fdr_plot':
+                # Create dummy data for FDR plot for now
+                data_to_send['fdr_data'] = {
+                    'target_qscores': [0.1, 0.2, 0.3, 0.4, 0.5],
+                    'decoy_qscores': [0.15, 0.25, 0.35, 0.45, 0.55]
+                }
+                component_arguments = FDRPlotly(title="FDR Analysis")
+                per_scan_contents['fdr_plot'] = True
 
             components_of_this_row.append(FlashViewerComponent(component_arguments))
         components.append(components_of_this_row)
 
-    if any(per_scan_contents.values()):
+    #if any(per_scan_contents.values()):
+    if any(per_scan_contents.values()) and 'per_scan_data' in data_to_send:
         scan_table = data_to_send['per_scan_data']
         dfs = [scan_table]
         for key, exist in per_scan_contents.items():

@@ -10,6 +10,7 @@ COMPONENT_OPTIONS=[
     'Annotated spectrum (Scan table needed)',
     'Mass table (Scan table needed)',
     '3D S/N plot (Mass table needed)',
+    'FDR plot',  # New FDR component added here
     # "Sequence view" and "Internal fragment map" is added when "input_sequence" is submitted
 ]
 
@@ -21,6 +22,7 @@ COMPONENT_NAMES=[
     'anno_spectrum',
     'mass_table',
     '3D_SN_plot',
+    'fdr_plot',  # New FDR component name added here
     # "sequence view" and "internal fragment map" added when "input_sequence" is submitted
 ]
 

@@ -23,6 +23,20 @@ import streamlit as st
 from pathlib import Path
 from src.captcha_ import captcha_control
 from src.common import page_setup, save_params
+#added for FDR
+import random
+
+
+def create_dummy_fdr_data():
+    # Create some dummy q-score data for testing
+    target_qscores = [random.uniform(0, 1) for _ in range(100)]
+    decoy_qscores = [random.uniform(0, 1) for _ in range(80)]
+
+    # Store the data in session state for Vue component access
+    st.session_state['fdr_data'] = {
+        'target_qscores': target_qscores,
+        'decoy_qscores': decoy_qscores
+    }
 
 
 
@@ -55,6 +69,10 @@ def main():
         st.session_state.current_tool_name = 'FLASHDeconv'
         st.session_state.prev_tool_name = 'FLASHDeconv'
         st.rerun()
+
+
+    # Call the dummy data function
+    create_dummy_fdr_data()
 
     # main content
     st.markdown('#### FLASHViewer visualizes outputs from FLASH\* tools.')

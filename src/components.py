@@ -4,7 +4,7 @@ import streamlit.components.v1 as st_components
 
 # Create a _RELEASE constant. We'll set this to False while we're developing
 # the component, and True when we're ready to package and distribute it.
-_RELEASE = True
+_RELEASE = False
 
 
 def flash_viewer_grid_component(components, data, component_key='flash_viewer_grid'):
@@ -102,3 +102,9 @@ class InternalFragmentMap:
 class FLASHQuant:
     def __init__(self):
         self.componentName = 'FLASHQuantView'
+
+# New FDRPlotly component class added
+class FDRPlotly:
+    def __init__(self, title):
+        self.title = title
+        self.componentName = "FDRPlotly"
