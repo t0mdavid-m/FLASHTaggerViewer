@@ -5,8 +5,9 @@ from .CommandExecutor import CommandExecutor
 from .StreamlitUI import StreamlitUI
 from .FileManager import FileManager
 import multiprocessing
-import shutil
 import streamlit as st
+import shutil
+import time
 
 class WorkflowManager:
     # Core workflow logic using the above classes
@@ -26,13 +27,15 @@ class WorkflowManager:
         The workflow itself needs to be a process, otherwise streamlit will wait for everything to finish before updating the UI again.
         """
         # Delete the log file if it already exists
-        self.logger.log_file.unlink(missing_ok=True)
+        shutil.rmtree(Path(self.workflow_dir, "logs"), ignore_errors=True)
         # Start workflow process
         workflow_process = multiprocessing.Process(target=self.workflow_process)
         workflow_process.start()
         # Add workflow process id to pid dir
         self.executor.pid_dir.mkdir()
         Path(self.executor.pid_dir, str(workflow_process.pid)).touch()
+        time.sleep(3)
+        st.rerun()
 
     def workflow_process(self) -> None:
         """
@@ -67,7 +70,7 @@ class WorkflowManager:
         """
         Shows the execution section of the UI with content defined in self.execution().
         """
-        self.ui.execution_section(self.start_workflow, self.pp)
+        self.ui.execution_section(self.start_workflow)
         
     def show_results_section(self) -> None:
         """
@@ -109,7 +112,4 @@ class WorkflowManager:
         ###################################
         # Display results here
         ###################################
-        pass
-
-    def pp(self) -> None:
         pass

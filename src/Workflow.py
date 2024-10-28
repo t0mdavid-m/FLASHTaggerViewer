@@ -30,6 +30,7 @@ class TagWorkflow(WorkflowManager):
                                   fallback='example-data/flashtagger/example_database.fasta')
 
 
+    @st.fragment
     def configure(self) -> None:
         # Input File Selection
         self.ui.select_input_file("mzML-files", multiple=True)
