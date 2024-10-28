@@ -47,23 +47,18 @@ def generate_and_display_plots(df):
     st.plotly_chart(fig_ecdf)
     st.plotly_chart(fig_density)
 
-def main():
-    st.title('ECDF and Density Plot of QScore Distribution of Targets and Decoys')
+st.title('ECDF and Density Plot of QScore Distribution of Targets and Decoys')
 
-    if 'parsed_tsv_files' not in st.session_state or not st.session_state['parsed_tsv_files']:
-        st.warning("No TSV files uploaded. Please upload TSV files first.")
-        return
+if 'parsed_tsv_files' not in st.session_state or not st.session_state['parsed_tsv_files']:
+    st.warning("No TSV files uploaded. Please upload TSV files first.")
+    st.stop()
 
-    tsv_files = list(st.session_state['parsed_tsv_files'].keys())
-    tsv_file = st.selectbox("Select TSV file", tsv_files)
+tsv_files = list(st.session_state['parsed_tsv_files'].keys())
+tsv_file = st.selectbox("Select TSV file", tsv_files)
 
-    if tsv_file:
-        df = st.session_state['parsed_tsv_files'][tsv_file]
-        generate_and_display_plots(df)
-
-if __name__ == "__main__":
-    main()
-
+if tsv_file:
+    df = st.session_state['parsed_tsv_files'][tsv_file]
+    generate_and_display_plots(df)
 
 
 

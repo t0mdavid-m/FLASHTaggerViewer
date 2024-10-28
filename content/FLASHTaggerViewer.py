@@ -6,9 +6,9 @@ from src.components import *
 from src.sequence import getFragmentDataFromSeq, getInternalFragmentDataFromSeq
 from io import StringIO, BytesIO
 from zipfile import ZipFile, ZIP_DEFLATED
-from pages.FileUploadTagger import handleInputFiles
-from pages.FileUploadTagger import parseUploadedFiles
-from pages.FileUploadTagger import initializeWorkspace, showUploadedFilesTable
+from content.FileUploadTagger import handleInputFiles
+from content.FileUploadTagger import parseUploadedFiles
+from content.FileUploadTagger import initializeWorkspace, showUploadedFilesTable
 from pyopenms import AASequence
 
 from src.sequence import remove_ambigious
@@ -264,93 +264,85 @@ def select_experiment():
 
 
 
-def content():
-    page_setup("TaggerViewer")
-    #setSequenceViewInDefaultView()
-    st.session_state['progress_bar_space'] = st.container()
-    input_types = ["deconv-mzMLs", "anno-mzMLs", "tags-tsv", "proteins-tsv", "tntsettings-json"]
-    parsed_df_types = ["deconv_dfs_tagger", "anno_dfs_tagger", "tag_dfs_tagger", "protein_dfs_tagger", 'tntsettings-json']
-    initializeWorkspace(input_types, parsed_df_types)
-    parseUploadedFiles()
-    showUploadedFilesTable()
+page_setup("TaggerViewer")
+#setSequenceViewInDefaultView()
+st.session_state['progress_bar_space'] = st.container()
+input_types = ["deconv-mzMLs", "anno-mzMLs", "tags-tsv", "proteins-tsv", "tntsettings-json"]
+parsed_df_types = ["deconv_dfs_tagger", "anno_dfs_tagger", "tag_dfs_tagger", "protein_dfs_tagger", 'tntsettings-json']
+initializeWorkspace(input_types, parsed_df_types)
+parseUploadedFiles()
+showUploadedFilesTable()
 
-    ### if no input file is given, show blank page
-    if "experiment-df-tagger" not in st.session_state:
-        st.error('No results to show yet. Please run a workflow first!')
-        return
+### if no input file is given, show blank page
+if "experiment-df-tagger" not in st.session_state:
+    st.error('No results to show yet. Please run a workflow first!')
+    st.stop()
 
-    # input experiment file names (for select-box later)
-    experiment_df = st.session_state["experiment-df-tagger"]
+# input experiment file names (for select-box later)
+experiment_df = st.session_state["experiment-df-tagger"]
 
-    # Map names to index
-    name_to_index = {n : i for i, n in enumerate(experiment_df['Experiment Name'])}
-
-
-    ### for only single experiment on one view
-    st.selectbox(
-        "choose experiment", experiment_df['Experiment Name'], 
-        key="selected_experiment_dropdown_tagger", 
-        index=name_to_index[st.session_state.selected_experiment0_tagger] if 'selected_experiment0_tagger' in st.session_state else None,
-        on_change=select_experiment
-    )
-
-    if 'selected_experiment0_tagger' in st.session_state:
-        selected_exp0 = experiment_df[experiment_df['Experiment Name'] == st.session_state.selected_experiment0_tagger]
-        layout_info = DEFAULT_LAYOUT
-        if "saved_layout_setting_tagger" in st.session_state:  # when layout manager was used
-            layout_info = st.session_state["saved_layout_setting_tagger"][0]
-        with st.spinner('Loading component...'):
-            sendDataToJS(selected_exp0, layout_info)
-
-    ### for multiple experiments on one view
-    if "saved_layout_setting_tagger" in st.session_state and len(st.session_state["saved_layout_setting_tagger"]) > 1:
-
-        for exp_index, exp_layout in enumerate(st.session_state["saved_layout_setting_tagger"]):
-            if exp_index == 0: continue  # skip the first experiment
-
-            st.divider() # horizontal line
-
-            st.selectbox(
-                "choose experiment", experiment_df['Experiment Name'], 
-                key=f'selected_experiment_dropdown_{exp_index}_tagger',
-                index = name_to_index[st.session_state[f'selected_experiment{exp_index}_tagger']] if f'selected_experiment{exp_index}_tagger' in st.session_state else None,
-                on_change=select_experiment
-            )
-
-            # if #experiment input files are less than #layouts, all the pre-selection will be the first experiment
-            if f"selected_experiment{exp_index}_tagger" in st.session_state:
-                selected_exp = experiment_df[
-                    experiment_df['Experiment Name'] == st.session_state["selected_experiment%d_tagger"%exp_index]]
-                layout_info = st.session_state["saved_layout_setting_tagger"][exp_index]
-
-                with st.spinner('Loading component...'):
-                    sendDataToJS(selected_exp, layout_info, 'flash_viewer_grid_%d' % exp_index)
+# Map names to index
+name_to_index = {n : i for i, n in enumerate(experiment_df['Experiment Name'])}
 
 
-    # selected_tags = selected_exp0.iloc[0]['Tag Files']
-    # selected_proteins = selected_exp0.iloc[0]['Protein Files']
-    # tag_df = st.session_state['tag_dfs_tagger'][selected_tags]
-    # protein_df = st.session_state['protein_dfs_tagger'][selected_proteins]
+### for only single experiment on one view
+st.selectbox(
+    "choose experiment", experiment_df['Experiment Name'], 
+    key="selected_experiment_dropdown_tagger", 
+    index=name_to_index[st.session_state.selected_experiment0_tagger] if 'selected_experiment0_tagger' in st.session_state else None,
+    on_change=select_experiment
+)
 
-    # tag_buffer = StringIO()
-    # tag_df.to_csv(tag_buffer, sep='\t', index=False)
-    # tag_buffer.seek(0)
+if 'selected_experiment0_tagger' in st.session_state:
+    selected_exp0 = experiment_df[experiment_df['Experiment Name'] == st.session_state.selected_experiment0_tagger]
+    layout_info = DEFAULT_LAYOUT
+    if "saved_layout_setting_tagger" in st.session_state:  # when layout manager was used
+        layout_info = st.session_state["saved_layout_setting_tagger"][0]
+    with st.spinner('Loading component...'):
+        sendDataToJS(selected_exp0, layout_info)
 
-    # protein_buffer = StringIO()
-    # protein_df.to_csv(protein_buffer, sep='\t', index=False)
-    # protein_buffer.seek(0)
+### for multiple experiments on one view
+if "saved_layout_setting_tagger" in st.session_state and len(st.session_state["saved_layout_setting_tagger"]) > 1:
 
-    # zip_buffer = BytesIO()
-    # with ZipFile(zip_buffer, 'w', ZIP_DEFLATED) as zip_file:
-    #     zip_file.writestr('tags.tsv', tag_buffer.getvalue())
-    #     zip_file.writestr('proteins.tsv', protein_buffer.getvalue())
-    # zip_buffer.seek(0)
-    
-    # st.download_button("Download ⬇️", zip_buffer, file_name=f'{st.session_state.selected_experiment0}.zip')
+    for exp_index, exp_layout in enumerate(st.session_state["saved_layout_setting_tagger"]):
+        if exp_index == 0: continue  # skip the first experiment
+
+        st.divider() # horizontal line
+
+        st.selectbox(
+            "choose experiment", experiment_df['Experiment Name'], 
+            key=f'selected_experiment_dropdown_{exp_index}_tagger',
+            index = name_to_index[st.session_state[f'selected_experiment{exp_index}_tagger']] if f'selected_experiment{exp_index}_tagger' in st.session_state else None,
+            on_change=select_experiment
+        )
+
+        # if #experiment input files are less than #layouts, all the pre-selection will be the first experiment
+        if f"selected_experiment{exp_index}_tagger" in st.session_state:
+            selected_exp = experiment_df[
+                experiment_df['Experiment Name'] == st.session_state["selected_experiment%d_tagger"%exp_index]]
+            layout_info = st.session_state["saved_layout_setting_tagger"][exp_index]
+
+            with st.spinner('Loading component...'):
+                sendDataToJS(selected_exp, layout_info, 'flash_viewer_grid_%d' % exp_index)
 
 
-if __name__ == "__main__":
-    # try:
-    content()
-    # except:
-    #     st.warning(ERRORS["visualization"])
+# selected_tags = selected_exp0.iloc[0]['Tag Files']
+# selected_proteins = selected_exp0.iloc[0]['Protein Files']
+# tag_df = st.session_state['tag_dfs_tagger'][selected_tags]
+# protein_df = st.session_state['protein_dfs_tagger'][selected_proteins]
+
+# tag_buffer = StringIO()
+# tag_df.to_csv(tag_buffer, sep='\t', index=False)
+# tag_buffer.seek(0)
+
+# protein_buffer = StringIO()
+# protein_df.to_csv(protein_buffer, sep='\t', index=False)
+# protein_buffer.seek(0)
+
+# zip_buffer = BytesIO()
+# with ZipFile(zip_buffer, 'w', ZIP_DEFLATED) as zip_file:
+#     zip_file.writestr('tags.tsv', tag_buffer.getvalue())
+#     zip_file.writestr('proteins.tsv', protein_buffer.getvalue())
+# zip_buffer.seek(0)
+
+# st.download_button("Download ⬇️", zip_buffer, file_name=f'{st.session_state.selected_experiment0}.zip')

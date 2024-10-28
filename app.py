@@ -16,11 +16,11 @@ if __name__ == '__main__':
             st.Page(Path("content", "FLASHFDR.py"), title="ECDF Plot", icon="📈"),
         ],
         "🧨 FLASHTnT": [
-            st.Page(Path("content", "FLASHTaggerWorkflow.py"), title="Workflow", icon="📁"),
-            st.Page(Path("content", "FileUploadTagger.py"), title="File Upload", icon="⚙️"),
-            st.Page(Path("content", "LayoutManagerTagger.py"), title="Layout Manager", icon="🚀"),
-            st.Page(Path("content", "FLASHTaggerViewer.py"), title="Viewer", icon="📊"),
-            st.Page(Path("content", "FLASHTaggerDownload.py"), title="Download", icon="📊"),
+            st.Page(Path("content", "FLASHTaggerWorkflow.py"), title="Workflow", icon="⚙️"),
+            st.Page(Path("content", "FileUploadTagger.py"), title="File Upload", icon="📁"),
+            st.Page(Path("content", "LayoutManagerTagger.py"), title="Layout Manager", icon="📝️"),
+            st.Page(Path("content", "FLASHTaggerViewer.py"), title="Viewer", icon="👀"),
+            st.Page(Path("content", "FLASHTaggerDownload.py"), title="Download", icon="⬇️"),
         ],
         "📊 FLASHQuant" : [
             st.Page(Path("content", "FileUpload_FLASHQuant.py"), title="File Upload", icon="📂"),
