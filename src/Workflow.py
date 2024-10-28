@@ -24,9 +24,9 @@ class TagWorkflow(WorkflowManager):
         t = st.tabs(["MS data", "Database"])
         with t[0]:
             example_data = ['example-data/flashtagger/example_spectrum_%d.mzML' % n for n in [1, 2]]
-            self.ui.upload_widget(key="mzML-files", name="MS data", file_type="mzML", fallback=example_data)
+            self.ui.upload_widget(key="mzML-files", name="MS data", file_types="mzML", fallback=example_data)
         with t[1]:
-            self.ui.upload_widget(key="fasta-file", name="Database", file_type="fasta", enable_directory=False,
+            self.ui.upload_widget(key="fasta-file", name="Database", file_types="fasta", enable_directory=False,
                                   fallback='example-data/flashtagger/example_database.fasta')
 
 
@@ -224,7 +224,7 @@ class DeconvWorkflow(WorkflowManager):
 
 
     def upload(self)-> None:
-        self.ui.upload_widget(key="mzML-files", name="MS data", file_type="mzML",
+        self.ui.upload_widget(key="mzML-files", name="MS data", file_types="mzML",
                               fallback=['example-data/flashdeconv/example_fd.mzML'])
 
 
