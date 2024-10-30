@@ -8,7 +8,7 @@ if __name__ == '__main__':
         ],
         "⚡️ FLASHDeconv" : [
             st.Page(Path("content", "FLASHDeconvWorkflow.py"), title="Workflow", icon="⚙️"),
-            st.Page(Path("content", "FileUpload.py"), title="File Upload", icon="📁"),
+            st.Page(Path("content", "FileUpload.py"), title="Manual File Upload", icon="📁"),
             st.Page(Path("content", "SequenceInput.py"), title="Sequence Input", icon="🧵"),
             st.Page(Path("content", "LayoutManager.py"), title="Layout Manager", icon="📝️"),
             st.Page(Path("content", "FLASHDeconvViewer.py"), title="Viewer", icon="👀"),
@@ -17,13 +17,13 @@ if __name__ == '__main__':
         ],
         "🧨 FLASHTnT": [
             st.Page(Path("content", "FLASHTaggerWorkflow.py"), title="Workflow", icon="⚙️"),
-            st.Page(Path("content", "FileUploadTagger.py"), title="File Upload", icon="📁"),
+            st.Page(Path("content", "FileUploadTagger.py"), title="Manual File Upload", icon="📁"),
             st.Page(Path("content", "LayoutManagerTagger.py"), title="Layout Manager", icon="📝️"),
             st.Page(Path("content", "FLASHTaggerViewer.py"), title="Viewer", icon="👀"),
             st.Page(Path("content", "FLASHTaggerDownload.py"), title="Download", icon="⬇️"),
         ],
         "📊 FLASHQuant" : [
-            st.Page(Path("content", "FileUpload_FLASHQuant.py"), title="File Upload", icon="📂"),
+            st.Page(Path("content", "FileUpload_FLASHQuant.py"), title="Manual File Upload", icon="📂"),
             st.Page(Path("content", "FLASHQuantViewer.py"), title="Viewer", icon="👀"),
         ],
     }
