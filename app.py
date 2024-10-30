@@ -24,9 +24,9 @@ if __name__ == '__main__':
         ],
         "📊 FLASHQuant" : [
             st.Page(Path("content", "FileUpload_FLASHQuant.py"), title="File Upload", icon="📂"),
-            st.Page(Path("content", "FLASHQuantViewer.py"), title="View MS data", icon="👀"),
+            st.Page(Path("content", "FLASHQuantViewer.py"), title="Viewer", icon="👀"),
         ],
     }
 
-    pg = st.navigation(pages)
+    pg = st.navigation(pages, expanded=True)
     pg.run()
