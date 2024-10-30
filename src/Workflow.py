@@ -150,7 +150,7 @@ class TagWorkflow(WorkflowManager):
                         'in' : [database[0]],
                         'out' : [out_db],
                     },
-                    params_manual = {
+                    custom_params = {
                         'method' : 'shuffle',
                         'shuffle_decoy_ratio' : ratio,
                         'enzyme' : 'no cleavage',
@@ -178,7 +178,7 @@ class TagWorkflow(WorkflowManager):
                     'out_feature1' : [out_feature1],
                     'out_feature2' : [out_feature2],
                 },
-                params_manual = {
+                custom_params = {
                     'threads' : threads
                 }
             )
@@ -193,7 +193,7 @@ class TagWorkflow(WorkflowManager):
                     'out_pro' :  [out_protein],
                     'out_prsm' : [out_prsm]
                 },
-                params_manual = {
+                custom_params = {
                     'threads' : threads
                 }
             )
@@ -314,7 +314,7 @@ class DeconvWorkflow(WorkflowManager):
                     'out_feature1' : [out_feature1],
                     'out_feature2' : [out_feature2],
                 },
-                params_manual = {
+                custom_params = {
                     'threads' : threads
                 }
             )
