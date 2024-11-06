@@ -49,7 +49,7 @@ class StreamlitUI:
         else:
             st.error("Nothing to add, please upload file.")
             
-    @st.experimental_fragment
+    @st.fragment
     def upload_widget(
         self,
         key: str,
