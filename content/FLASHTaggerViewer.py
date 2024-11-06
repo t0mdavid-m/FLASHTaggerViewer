@@ -3,12 +3,9 @@ import json
 from src.common.common import *
 from src.masstable import *
 from src.components import *
-from src.sequence import getFragmentDataFromSeq, getInternalFragmentDataFromSeq
-from io import StringIO, BytesIO
-from zipfile import ZipFile, ZIP_DEFLATED
-from content.FileUploadTagger import handleInputFiles
-from content.FileUploadTagger import parseUploadedFiles
-from content.FileUploadTagger import initializeWorkspace, showUploadedFilesTable
+from src.sequence import getFragmentDataFromSeq
+from io import StringIO
+from src.parse.tnt import initializeWorkspace, showUploadedFilesTable, parseUploadedFiles
 from pyopenms import AASequence
 
 from src.sequence import remove_ambigious

@@ -7,7 +7,7 @@ from src.masstable import getMSSignalDF, getSpectraTableDF
 from src.components import PlotlyHeatmap, PlotlyLineplot, Plotly3Dplot, Tabulator, SequenceView, InternalFragmentMap, \
                            FlashViewerComponent, flash_viewer_grid_component
 from src.sequence import getFragmentDataFromSeq, getInternalFragmentDataFromSeq
-from content.FileUpload import initializeWorkspace, parseUploadedFiles, getUploadedFileDF
+from src.parse.deconv import initializeWorkspace, parseUploadedFiles, getUploadedFileDF
 
 
 DEFAULT_LAYOUT = [['ms1_deconv_heat_map'], ['scan_table', 'mass_table'],
