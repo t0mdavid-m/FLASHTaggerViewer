@@ -21,8 +21,8 @@ except ImportError:
 from src.common.captcha_ import captcha_control
 
 # set these variables according to your project
-APP_NAME = "OpenMS Streamlit App"
-REPOSITORY_NAME = "streamlit-template"
+APP_NAME = "FLASHApp"
+REPOSITORY_NAME = "flashapp"
 
 # Detect system platform
 OS_PLATFORM = sys.platform
