@@ -4,7 +4,7 @@ import streamlit.components.v1 as st_components
 
 # Create a _RELEASE constant. We'll set this to False while we're developing
 # the component, and True when we're ready to package and distribute it.
-_RELEASE = True
+_RELEASE = False
 
 
 def flash_viewer_grid_component(components, data, component_key='flash_viewer_grid'):
@@ -32,8 +32,8 @@ def flash_viewer_grid_component(components, data, component_key='flash_viewer_gr
 
     component_value = _component_func(
         components=out_components,
-        data_for_drawing=data_for_drawing,
-        key=component_key
+        key=component_key,
+        **data
     )
 
     return component_value
