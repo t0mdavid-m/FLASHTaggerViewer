@@ -37,7 +37,7 @@ class TagWorkflow(WorkflowManager):
         self.ui.select_input_file("fasta-file", multiple=False)
 
         # Number of threads cannot be selected in online mode
-        if 'local' in sys.argv:
+        if st.session_state.location != "online":
             self.ui.input_widget(
                 'threads', name='threads', default=multiprocessing.cpu_count(),
                 help='The number of threads that should be used to run the tools.'
@@ -233,7 +233,7 @@ class DeconvWorkflow(WorkflowManager):
         self.ui.select_input_file("mzML-files", multiple=True)
 
         # Number of threads cannot be selected in online mode
-        if 'local' in sys.argv:
+        if st.session_state.location != "online":
             self.ui.input_widget(
                 'threads', name='threads', default=multiprocessing.cpu_count(),
                 help='The number of threads that should be used to run the tools.'
