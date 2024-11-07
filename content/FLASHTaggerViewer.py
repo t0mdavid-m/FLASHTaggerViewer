@@ -262,6 +262,9 @@ def select_experiment():
 
 
 page_setup("TaggerViewer")
+
+st.title('FLASHViewer')
+
 #setSequenceViewInDefaultView()
 st.session_state['progress_bar_space'] = st.container()
 input_types = ["deconv-mzMLs", "anno-mzMLs", "tags-tsv", "proteins-tsv", "tntsettings-json"]

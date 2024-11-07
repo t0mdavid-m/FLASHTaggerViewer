@@ -6,7 +6,7 @@ from src.components import flash_viewer_grid_component, FlashViewerComponent, FL
 # page initialization
 params = page_setup()
 
-st.title('FLASHQuant Viewer')
+st.title('FLASHViewer')
 
 # if no input file is given, show blank page
 if "quant-experiment-df" not in st.session_state:

@@ -8,6 +8,8 @@ from zipfile import ZipFile, ZIP_DEFLATED
 
 page_setup()
 
+st.title('Download')
+
 # Define output folder here; all subfolders will be handled as downloadable
 # directories
 output_folder = 'FLASHDeconvOutput'
