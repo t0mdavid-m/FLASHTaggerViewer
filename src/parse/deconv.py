@@ -154,11 +154,9 @@ def showUploadedFilesTable() -> bool:
     elif len(deconv_files) != len(anno_files):
         st.error("The same number of deconvolved and annotated mzML file should be uploaded!")
     else:
-        v_space(2)
         st.session_state["experiment-df"] = getUploadedFileDF(deconv_files, anno_files)
         st.markdown('**Uploaded experiments in current workspace**')
         st.dataframe(st.session_state["experiment-df"])  # show table
-        v_space(1)
         return True
     return False
 
