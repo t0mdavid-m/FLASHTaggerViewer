@@ -132,9 +132,9 @@ anno_files = sorted(st.session_state["anno_dfs"].keys())
 st.session_state["experiment-df"] = getUploadedFileDF(deconv_files, anno_files)
 
 ### if no input file is given, show blank page
-if "experiment-df" not in st.session_state:
-    st.error('Upload input files first!')
-    sys.exit(0)
+if len(st.session_state["experiment-df"]) == 0:
+    st.error('No results to show yet. Please run a workflow first!')
+    st.stop()
 
 # input experiment file names (for select-box later)
 experiment_df = st.session_state["experiment-df"]
