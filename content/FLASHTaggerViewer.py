@@ -38,8 +38,8 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
     if isfile(settings_file):
         with open(settings_file, 'r') as f:
             tnt_settings = json.load(f)
-        if 'tnt:ex:ion_type' in tnt_settings:
-            fragments = tnt_settings['tnt:ex:ion_type']
+        if 'tnt:ion_type' in tnt_settings:
+            fragments = tnt_settings['tnt:ion_type'].split('\n')
 
 
     # getting data from mzML files
