@@ -10,7 +10,7 @@ st.markdown("## FLASHApp")
 
 
 # main content
-st.markdown('#### FLASHApp visualizes outputs from FLASH\* tools.')
+st.markdown('#### FLASHApp: A Platform for Your Favorite FLASH\* Tools!')
 
 st.info("""
     **💡 How to run FLASHApp**
