@@ -13,7 +13,7 @@ st.markdown("## FLASHApp")
 st.markdown('#### FLASHApp visualizes outputs from FLASH\* tools.')
 
 st.info("""
-    **💡 How to run FLASHViewer**
+    **💡 How to run FLASHApp**
     1. Go to the **⚙️ Workflow** page through the sidebar and run your analysis.\
         OR, go to the **📁 File Upload** page through the sidebar and upload FLASHDeconv output files (\*_annotated.mzML & \*_deconv.mzML)
     2. Click the **👀 Viewer** page on the sidebar to view the results in detail.
