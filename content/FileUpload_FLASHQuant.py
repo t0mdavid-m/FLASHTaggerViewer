@@ -2,15 +2,12 @@ import streamlit as st
 from pathlib import Path
 import shutil
 from src.common.common import v_space, page_setup, reset_directory, save_params
-from src.parse.quant import initializeWorkspace, handleInputFiles, parseUploadedFiles, getUploadedFileDF, remove_selected_experiment_files
+from src.parse.quant import initializeWorkspace, handleInputFiles, parseUploadedFiles, getUploadedFileDF, remove_selected_experiment_files, tool, input_file_types, parsed_df_types
 
 # page initialization
 params = page_setup()
 
 # make directory to store files & initialize data storage
-input_file_types = ["quant-files", "trace-files", "conflict-resolution-files"]
-parsed_df_types = ["quant_dfs", "trace_dfs", "conflict_resolution_dfs"]
-tool = 'FLASHQuantViewer'
 initializeWorkspace(input_file_types, parsed_df_types)
 
 st.title("File Upload")

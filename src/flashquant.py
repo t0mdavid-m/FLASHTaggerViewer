@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import streamlit as st
 
 
@@ -36,12 +37,12 @@ def connectTraceWithResult(quant_df, trace_df):
     charges, isotopes, centroidmzs, rts, mzs, intensities = [], [], [], [], [], []
     for index, row in quant_df.iterrows():
         traces = trace_df[trace_df['FeatureGroupID'] == row['FeatureGroupIndex']]
-        charges.append(traces['Charge'])
-        isotopes.append(traces['IsotopeIndex'])
-        centroidmzs.append(traces['CentroidMz'])
-        rts.append(traces['RTs'])
-        mzs.append(traces['MZs'])
-        intensities.append(traces['Intensities'])
+        charges.append(np.array(traces['Charge'], dtype='int'))
+        isotopes.append(np.array(traces['IsotopeIndex'], dtype='int'))
+        centroidmzs.append(np.array(traces['CentroidMz'], dtype='float'))
+        rts.append(list(traces['RTs']))
+        mzs.append(list(traces['MZs']))
+        intensities.append(list(traces['Intensities']))
     collected_df = pd.DataFrame(zip(charges, isotopes, centroidmzs, rts, mzs, intensities),
                                 columns=['Charges', 'IsotopeIndices', 'CentroidMzs', 'RTs', 'MZs', 'Intensities'])
     out_df = pd.concat([quant_df, collected_df], axis=1)

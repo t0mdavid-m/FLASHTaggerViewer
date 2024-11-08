@@ -5,6 +5,9 @@ import pandas as pd
 from src.flashquant import parseFLASHQuantOutput
 from src.flashquant import connectTraceWithResult
 
+tool = 'FLASHQuantViewer'
+input_file_types = ["quant-files", "trace-files", "conflict-resolution-files"]
+parsed_df_types = ["quant_dfs", "trace_dfs", "conflict_resolution_dfs"]
 
 @st.cache_data
 def getUploadedFileDF(quant_files, trace_files, resolution_files):
