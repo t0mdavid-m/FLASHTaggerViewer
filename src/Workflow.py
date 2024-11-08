@@ -24,19 +24,20 @@ class TagWorkflow(WorkflowManager):
         t = st.tabs(["MS data", "Database"])
         with t[0]:
             example_data = ['example-data/flashtagger/example_spectrum_%d.mzML' % n for n in [1, 2]]
-            self.ui.upload_widget(key="mzML-files", name="MS data", file_type="mzML", fallback=example_data)
+            self.ui.upload_widget(key="mzML-files", name="MS data", file_types="mzML", fallback=example_data)
         with t[1]:
-            self.ui.upload_widget(key="fasta-file", name="Database", file_type="fasta", enable_directory=False,
+            self.ui.upload_widget(key="fasta-file", name="Database", file_types="fasta",
                                   fallback='example-data/flashtagger/example_database.fasta')
 
 
+    @st.fragment
     def configure(self) -> None:
         # Input File Selection
         self.ui.select_input_file("mzML-files", multiple=True)
         self.ui.select_input_file("fasta-file", multiple=False)
 
         # Number of threads cannot be selected in online mode
-        if 'local' in sys.argv:
+        if st.session_state.location != "online":
             self.ui.input_widget(
                 'threads', name='threads', default=multiprocessing.cpu_count(),
                 help='The number of threads that should be used to run the tools.'
@@ -113,6 +114,8 @@ class TagWorkflow(WorkflowManager):
                 rmtree(folder_path)
             makedirs(folder_path)
 
+            self.logger.log(f'Processing {current_base}:')
+
             # Define output paths for viewer
             out_db = join(base_path, self.tool_name, 'db-fasta', f'{current_base}_{current_time}_db.fasta')
             out_anno = join(base_path, self.tool_name, 'anno-mzMLs', f'{current_base}_{current_time}_annotated.mzML')
@@ -141,6 +144,8 @@ class TagWorkflow(WorkflowManager):
                     ratio = 10
                 else:
                     ratio = 1
+                
+                self.logger.log(f"-> Creating decoy database with target:decoy ratio 1:{ratio}...")
 
                 # Run decoy database
                 self.executor.run_topp(
@@ -149,7 +154,7 @@ class TagWorkflow(WorkflowManager):
                         'in' : [database[0]],
                         'out' : [out_db],
                     },
-                    params_manual = {
+                    custom_params = {
                         'method' : 'shuffle',
                         'shuffle_decoy_ratio' : ratio,
                         'enzyme' : 'no cleavage',
@@ -159,6 +164,8 @@ class TagWorkflow(WorkflowManager):
                 # If no decoy database is needed the database file is copied as is
                 copyfile(database[0], out_db)
             
+            self.logger.log(f"-> Running FLASHDeconv...")
+
             # Run FLASHDeconv (1/2)
             self.executor.run_topp(
                 'FLASHDeconv',
@@ -177,10 +184,12 @@ class TagWorkflow(WorkflowManager):
                     'out_feature1' : [out_feature1],
                     'out_feature2' : [out_feature2],
                 },
-                params_manual = {
+                custom_params = {
                     'threads' : threads
                 }
             )
+
+            self.logger.log(f"-> Running FLASHTnT...")
 
             # Run FLASHTnT (2/2)
             self.executor.run_topp(
@@ -192,7 +201,7 @@ class TagWorkflow(WorkflowManager):
                     'out_pro' :  [out_protein],
                     'out_prsm' : [out_prsm]
                 },
-                params_manual = {
+                custom_params = {
                     'threads' : threads
                 }
             )
@@ -223,7 +232,7 @@ class DeconvWorkflow(WorkflowManager):
 
 
     def upload(self)-> None:
-        self.ui.upload_widget(key="mzML-files", name="MS data", file_type="mzML",
+        self.ui.upload_widget(key="mzML-files", name="MS data", file_types="mzML",
                               fallback=['example-data/flashdeconv/example_fd.mzML'])
 
 
@@ -232,7 +241,7 @@ class DeconvWorkflow(WorkflowManager):
         self.ui.select_input_file("mzML-files", multiple=True)
 
         # Number of threads cannot be selected in online mode
-        if 'local' in sys.argv:
+        if st.session_state.location != "online":
             self.ui.input_widget(
                 'threads', name='threads', default=multiprocessing.cpu_count(),
                 help='The number of threads that should be used to run the tools.'
@@ -279,6 +288,8 @@ class DeconvWorkflow(WorkflowManager):
                 rmtree(folder_path)
             makedirs(folder_path)
 
+            self.logger.log(f'Processing {current_base}:')
+
             # Define output paths for viewer
             out_tsv = join(base_path, self.tool_name, 'tsv-files', f'{current_base}_{current_time}.tsv')
             out_deconv = join(base_path, self.tool_name, 'deconv-mzMLs', f'{current_base}_{current_time}_deconv.mzML')
@@ -294,6 +305,8 @@ class DeconvWorkflow(WorkflowManager):
             out_msalign2 = join(folder_path, f'toppic_ms2.msalign')
             out_feature1 = join(folder_path, f'toppic_ms1.feature')
             out_feature2 = join(folder_path, f'toppic_ms2.feature')
+
+            self.logger.log(f"-> Running FLASHDeconv...")
 
             # Run FLASHDeconv
             self.executor.run_topp(
@@ -313,7 +326,7 @@ class DeconvWorkflow(WorkflowManager):
                     'out_feature1' : [out_feature1],
                     'out_feature2' : [out_feature2],
                 },
-                params_manual = {
+                custom_params = {
                     'threads' : threads
                 }
             )

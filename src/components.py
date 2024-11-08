@@ -32,8 +32,8 @@ def flash_viewer_grid_component(components, data, component_key='flash_viewer_gr
 
     component_value = _component_func(
         components=out_components,
-        data_for_drawing=data_for_drawing,
-        key=component_key
+        key=component_key,
+        **data
     )
 
     return component_value

@@ -1,7 +1,7 @@
 # This Dockerfile builds OpenMS, the TOPP tools, pyOpenMS and thidparty tools.
 # It also adds a basic streamlit server that serves a pyOpenMS-based app.
 # hints:
-# build image and give it a name (here: streamlitapp) with: docker build --no-cache -t streamlitapp:latest --build-arg GITHUB_TOKEN=<your-github-token> . 2>&1 | tee build.log 
+# build image and give it a name (here: streamlitapp) with: docker build --no-cache -t streamlitapp:latest --build-arg GITHUB_TOKEN=<your-github-token> . 2>&1 | tee build.log
 # check if image was build: docker image ls
 # run container: docker run -p 8501:8501 streamlitappsimple:latest
 # debug container after build (comment out ENTRYPOINT) and run container with interactive /bin/bash shell
@@ -141,16 +141,19 @@ FROM compile-openms AS run-app
 
 # note: specifying folder with slash as suffix and repeating the folder name seems important to preserve directory structure
 WORKDIR /app
-COPY example-data/flashtagger/example_database.fasta /app/
-COPY example-data/flashtagger/example_spectrum_1.mzML /app/
-COPY example-data/flashtagger/example_spectrum_2.mzML /app/
-COPY app.py /app/app.py 
-COPY src/ /app/src
-COPY assets/ /app/assets
-COPY example-data/ /app/example-data
+
 COPY .streamlit/ /app/.streamlit
-COPY pages/ /app/pages
+COPY assets/ /app/assets
 COPY clean-up-workspaces.py /app/clean-up-workspaces.py
+COPY content/ /app/content
+# COPY docs/ /app/docs
+COPY example-data/ /app/example-data
+COPY gdpr_consent/ /app/gdpr_consent
+COPY hooks/ /app/hooks
+COPY src/ /app/src
+COPY app.py /app/app.py
+COPY settings.json /app/settings.json
+COPY default-parameters.json /app/default-parameters.json
 
 # add cron job to the crontab
 RUN echo "0 3 * * * /root/miniforge3/envs/streamlit-env/bin/python /app/clean-up-workspaces.py >> /app/clean-up-workspaces.log 2>&1" | crontab -
@@ -161,6 +164,12 @@ RUN echo "service cron start" >> /app/entrypoint.sh
 RUN echo "mamba run --no-capture-output -n streamlit-env streamlit run app.py" >> /app/entrypoint.sh
 # make the script executable
 RUN chmod +x /app/entrypoint.sh
+
+# Patch Analytics
+RUN mamba run -n streamlit-env python hooks/hook-analytics.py
+
+# Set Online Deployment
+RUN jq '.online_deployment = true' settings.json > tmp.json && mv tmp.json settings.json
 
 # Download latest OpenMS App executable for Windows from Github actions workflow.
 RUN if [ -n "$GH_TOKEN" ]; then \
