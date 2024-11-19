@@ -1,4 +1,7 @@
 {
+    "app-name": "FLASHApp",
+    "github-user": "t0mdavid-m",
+    "repository-name": "FLASHViewer",
     "analytics": {
         "google-analytics": {
             "enabled": false,
