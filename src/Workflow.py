@@ -64,11 +64,12 @@ class TagWorkflow(WorkflowManager):
                     'max_trace_length', 'min_cos', 'type', 'isotope_correction',
                     'reporter_mz_tol', 'only_fully_quantified'
                 ],
-                display_subsections=True
+                display_subsections=True,
+                display_tool_name=False
             )
         with t[1]:
             # FLASHTnT Configuration
-            self.ui.input_TOPP('FLASHTnT', display_subsections=True)
+            self.ui.input_TOPP('FLASHTnT', display_subsections=True, display_tool_name=False)
 
 
     def execution(self) -> None:
@@ -250,7 +251,7 @@ class DeconvWorkflow(WorkflowManager):
 
         # FLASHDeconv Configuration
         self.ui.input_TOPP(
-            'FLASHDeconv', exclude_parameters = ['ida_log'], display_subsections=True
+            'FLASHDeconv', exclude_parameters = ['ida_log'], display_subsections=True,
         )
 
 
