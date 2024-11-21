@@ -264,7 +264,6 @@ jobs:
         cp -r src streamlit_exe
         cp -r content streamlit_exe
         cp -r assets streamlit_exe
-        cp -r content streamlit_exe
         cp -r settings.json streamlit_exe
         cp -r example-data streamlit_exe
         cp openms-bin/*.dll streamlit_exe
@@ -274,11 +273,6 @@ jobs:
         cp app.py streamlit_exe
         cp settings.json streamlit_exe
         cp default-parameters.json streamlit_exe
-
-        $files = $env:TOPP_TOOLS -split ' '
-        foreach ($file in $files) {
-          Copy-Item "openms-bin/${file}.exe" -Destination "streamlit_exe/${file}.exe"
-        }
 
         $files = $env:TOPP_TOOLS -split ' '
         foreach ($file in $files) {
