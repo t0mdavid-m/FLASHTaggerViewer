@@ -243,12 +243,16 @@ jobs:
         PYTHON_DIR="${{ runner.tool_cache }}/Python/${{ env.PYTHON_VERSION }}/x64" # Path from actions/setup-python
         EMBED_DIR="python-${{ env.PYTHON_VERSION }}"
         
+        # Define paths for the regular Python distribution and the embeddable distribution
+        $PYTHON_DIR="${{ runner.tool_cache }}/Python/${{ env.PYTHON_VERSION }}/x64" # Path from actions/setup-python
+        $EMBED_DIR="python-${{ env.PYTHON_VERSION }}"
+        
         # Copy necessary Tkinter files from the regular Python distribution
         cp -r $PYTHON_DIR/tcl $EMBED_DIR/
         cp -r $PYTHON_DIR/Lib/tkinter $EMBED_DIR/Lib/
-        cp $PYTHON_DIR/DLLs/_tkinter.pyd $EMBED_DIR/DLLs/
-        cp $PYTHON_DIR/DLLs/tcl86t.dll $EMBED_DIR/DLLs/
-        cp $PYTHON_DIR/DLLs/tk86t.dll $EMBED_DIR/DLLs/
+        cp $PYTHON_DIR/DLLs/_tkinter.pyd $EMBED_DIR/
+        cp $PYTHON_DIR/DLLs/tcl86t.dll $EMBED_DIR/
+        cp $PYTHON_DIR/DLLs/tk86t.dll $EMBED_DIR/
 
     - name: Install pip
       run: |
