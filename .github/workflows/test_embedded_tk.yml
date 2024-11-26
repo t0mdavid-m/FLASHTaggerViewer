@@ -34,8 +34,8 @@ jobs:
         rm python-${{ env.PYTHON_VERSION }}-embed-amd64.zip
         
         # Define paths for the regular Python distribution and the embeddable distribution
-        %PYTHON_DIR="${{ runner.tool_cache }}/Python/${{ env.PYTHON_VERSION }}/x64" # Path from actions/setup-python
-        %EMBED_DIR="python-${{ env.PYTHON_VERSION }}"
+        $PYTHON_DIR="${{ runner.tool_cache }}/Python/${{ env.PYTHON_VERSION }}/x64" # Path from actions/setup-python
+        $EMBED_DIR="python-${{ env.PYTHON_VERSION }}"
         
         # Copy necessary Tkinter files from the regular Python distribution
         cp -r $PYTHON_DIR/tcl $EMBED_DIR/
