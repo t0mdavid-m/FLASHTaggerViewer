@@ -268,7 +268,7 @@ jobs:
         cp openms-bin/*.dll streamlit_exe
         cp -r .streamlit streamlit_exe
         cp -r share streamlit_exe/share
-        cp -r js-component streamlit_exe/js-component/dist
+        cp -r js-component streamlit_exe/js-component
         cp app.py streamlit_exe
         cp settings.json streamlit_exe
         cp default-parameters.json streamlit_exe
