@@ -37,6 +37,9 @@ jobs:
         $PYTHON_DIR="${{ runner.tool_cache }}/Python/${{ env.PYTHON_VERSION }}/x64" # Path from actions/setup-python
         $EMBED_DIR="python-${{ env.PYTHON_VERSION }}"
         
+        dir $PYTHON_DIR/Lib/
+        dir $PYTHON_DIR/DLLs/
+
         # Copy necessary Tkinter files from the regular Python distribution
         cp -r $PYTHON_DIR/tcl $EMBED_DIR/
         cp -r $PYTHON_DIR/Lib/tkinter $EMBED_DIR/Lib/
