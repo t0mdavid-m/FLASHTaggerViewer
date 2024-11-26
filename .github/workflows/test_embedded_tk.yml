@@ -1,4 +1,4 @@
-name: Build executable for Windows
+name: Test Embedded
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 
 jobs:
-  build-executable:
+  build-embedded:
     runs-on: windows-latest
 
     env:
