@@ -40,6 +40,6 @@ jobs:
         # Copy necessary Tkinter files from the regular Python distribution
         cp -r $PYTHON_DIR/tcl $EMBED_DIR/
         cp -r $PYTHON_DIR/Lib/tkinter $EMBED_DIR/Lib/
-        cp $PYTHON_DIR/DLLs/_tkinter.pyd $EMBED_DIR/DLLs/
-        cp $PYTHON_DIR/DLLs/tcl86t.dll $EMBED_DIR/DLLs/
-        cp $PYTHON_DIR/DLLs/tk86t.dll $EMBED_DIR/DLLs/
+        cp $PYTHON_DIR/DLLs/_tkinter.pyd $EMBED_DIR/
+        cp $PYTHON_DIR/DLLs/tcl86t.dll $EMBED_DIR/
+        cp $PYTHON_DIR/DLLs/tk86t.dll $EMBED_DIR/
