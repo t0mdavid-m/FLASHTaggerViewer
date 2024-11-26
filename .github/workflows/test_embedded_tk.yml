@@ -38,7 +38,7 @@ jobs:
         $EMBED_DIR="python-${{ env.PYTHON_VERSION }}"
         
         dir $PYTHON_DIR/Lib/
-        dir $PYTHON_DIR/tkinter/
+        dir $PYTHON_DIR/Lib/tkinter/
         dir $PYTHON_DIR/tcl/
         dir $PYTHON_DIR/DLLs/
 
