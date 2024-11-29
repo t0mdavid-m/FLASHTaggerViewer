@@ -19,18 +19,6 @@ st.info("""
     2. Click the **👀 Viewer** page on the sidebar to view the results in detail.
     """)
 
-
-c1, c2 = st.columns(2)
-c1.markdown(
-    """
-## ⭐ New
-       
-- FLASHViewer is now FLASHApp
-- Want to save your progress or share it with your team? Simply bookmark / share the URL!
-"""
-)
-v_space(1, c2)
-c2.image("assets/pyopenms_transparent_background.png", width=300)
 if Path("OpenMS-App.zip").exists():
     st.subheader(
         """
@@ -50,3 +38,14 @@ Download the latest version for Windows here by clicking the button below.
 Extract the zip file and run the executable (.exe) file to launch the app. Since every dependency is compressed and packacked the app will take a while to launch (up to one minute).
 """
     )
+
+c1, c2 = st.columns(2)
+c1.markdown(
+    """
+## ⭐ New
+       
+- FLASHViewer is now FLASHApp
+- Want to save your progress or share it with your team? Simply bookmark / share the URL!
+"""
+)
+c2.image("assets/pyopenms_transparent_background.png", width=300)
