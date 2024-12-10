@@ -1,14 +1,17 @@
-import streamlit as st
-import multiprocessing
 import json
-import sys
 import time
-from .workflow.WorkflowManager import WorkflowManager
+import multiprocessing
 
-from os.path import join, splitext, basename, exists, dirname
-from os import makedirs
+import streamlit as st
+
+from pathlib import Path
+from os import makedirs, listdir
 from shutil import copyfile, rmtree
+from os.path import join, splitext, basename, exists, dirname
 
+from .parse.tnt import parseTnT
+from .parse.deconv import parseDeconv
+from .workflow.WorkflowManager import WorkflowManager
 
 DEFAULT_THREADS = 8
 
@@ -87,18 +90,8 @@ class TagWorkflow(WorkflowManager):
         
         # Make sure output directory exists
         base_path = dirname(self.workflow_dir)
-        if not exists(join(base_path, self.tool_name, 'db-fasta')):
-            makedirs(join(base_path, self.tool_name, 'db-fasta'))
-        if not exists(join(base_path, self.tool_name, 'anno-mzMLs')):
-            makedirs(join(base_path, self.tool_name, 'anno-mzMLs'))
-        if not exists(join(base_path, self.tool_name, 'deconv-mzMLs')):
-            makedirs(join(base_path, self.tool_name, 'deconv-mzMLs'))
-        if not exists(join(base_path, self.tool_name, 'tags-tsv')):
-            makedirs(join(base_path, self.tool_name, 'tags-tsv'))
-        if not exists(join(base_path, self.tool_name, 'proteins-tsv')):
-            makedirs(join(base_path, self.tool_name, 'proteins-tsv'))
         
-        # Set number of threads
+        # Define output directory
         if 'threads' in self.executor.parameter_manager.get_parameters_from_json():
             threads = self.executor.parameter_manager.get_parameters_from_json()['threads']
         else:
@@ -110,6 +103,7 @@ class TagWorkflow(WorkflowManager):
             # Generate output folder
             current_base = splitext(basename(in_mzml))[0]
             current_time = time.strftime("%Y%m%d-%H%M%S")
+            dataset_id = '%s_%s'%(current_base, current_time)
             folder_path = join(base_path, 'FLASHTaggerOutput', '%s_%s'%(current_base, current_time))
             if exists(folder_path):
                 rmtree(folder_path)
@@ -117,15 +111,10 @@ class TagWorkflow(WorkflowManager):
 
             self.logger.log(f'Processing {current_base}:')
 
-            # Define output paths for viewer
-            out_db = join(base_path, self.tool_name, 'db-fasta', f'{current_base}_{current_time}_db.fasta')
-            out_anno = join(base_path, self.tool_name, 'anno-mzMLs', f'{current_base}_{current_time}_annotated.mzML')
-            out_deconv = join(base_path, self.tool_name, 'deconv-mzMLs', f'{current_base}_{current_time}_deconv.mzML')
-            out_tag = join(base_path, self.tool_name, 'tags-tsv', f'{current_base}_{current_time}_tagged.tsv')
-            out_protein = join(base_path, self.tool_name, 'proteins-tsv', f'{current_base}_{current_time}_protein.tsv')
-
-            # Additional outputs are directly written to download folder
+            # Define output files
             out_tsv = join(folder_path, f'out.tsv')
+            out_deconv = join(folder_path, f'out_deconv.mzML')
+            out_anno = join(folder_path, f'anno_annotated.mzML')
             out_spec1 = join(folder_path, f'spec1.tsv')
             out_spec2 = join(folder_path, f'spec2.tsv')
             out_spec3 = join(folder_path, f'spec3.tsv')
@@ -135,7 +124,11 @@ class TagWorkflow(WorkflowManager):
             out_msalign2 = join(folder_path, f'toppic_ms2.msalign')
             out_feature1 = join(folder_path, f'toppic_ms1.feature')
             out_feature2 = join(folder_path, f'toppic_ms2.feature')
+
             out_prsm = join(folder_path, f'prsms.tsv')
+            out_db = join(folder_path, f'database.fasta')
+            out_tag = join(folder_path, f'tags.tsv')
+            out_protein = join(folder_path, f'protein.tsv')
 
             # Check if a decoy database needs to be generated
             tagger_params = self.executor.parameter_manager.get_parameters_from_json()['FLASHTnT']
@@ -207,20 +200,54 @@ class TagWorkflow(WorkflowManager):
                 }
             )
 
-            # Copy generated files to output
-            copyfile(out_db, join(folder_path, 'database.fasta'))
-            copyfile(out_anno, join(folder_path, 'annotated.mzML'))
-            copyfile(out_deconv, join(folder_path, 'out.mzML'))
-            copyfile(out_tag, join(folder_path, 'tags.tsv'))
-            copyfile(out_protein, join(folder_path, 'proteins.tsv'))
-            
-            # Store settings
-            for tool in ['FLASHDeconv', 'FLASHTnT']:
-                with open(join(folder_path, f'settings_{tool}.json'), 'w') as f:
-                    json.dump(
-                        self.executor.parameter_manager.get_parameters_from_json()[tool], f,
-                        indent='\t'
-                    )
+            self.logger.log(f"-> Processing Results...")
+
+            # Store all files
+            for file in listdir(folder_path):
+                self.file_manager.store_file(
+                    dataset_id, str(file).replace('.', '_'), 
+                    Path(folder_path, file), file_name=file
+                )
+            results = self.file_manager.get_results(
+                dataset_id, [
+                    'out_deconv_mzML', 'anno_annotated_mzML',
+                    'tags_tsv', 'protein_tsv'
+                ]
+            )
+            print('a')
+            parsedResults = parseTnT(
+                results['out_deconv_mzML'], results['anno_annotated_mzML'], 
+                results['tags_tsv'], results['protein_tsv']
+            )
+            print('b')
+            for k, v in parsedResults.items():
+                self.file_manager.store_data(dataset_id, k, v)
+
+            FDsettings = self.executor.parameter_manager.get_parameters_from_json()['FLASHDeconv']
+            self.file_manager.store_data(
+                dataset_id, 'FD_parameters', FDsettings
+            )
+            json_file = Path(folder_path, 'FD_parameters.json')
+            with open(json_file, 'w') as f:
+                json.dump(FDsettings, f)
+            self.file_manager.store_file(
+                dataset_id, 'FD_parameters_json', json_file, 
+                file_name='FD_parameters.json'
+            )
+            FTnTsettings = self.executor.parameter_manager.get_parameters_from_json()['FLASHTnT']
+            self.file_manager.store_data(
+                dataset_id, 'FTnT_parameters', FTnTsettings
+            )
+            json_file = Path(folder_path, 'FTnT_parameters.json')
+            with open(json_file, 'w') as f:
+                json.dump(FTnTsettings, f)
+            self.file_manager.store_file(
+                dataset_id, 'FTnT_parameters_json', json_file, 
+                file_name='FTnT_parameters.json'
+            )
+
+            # Remove temporary folder
+            rmtree(folder_path)
 
 
 
@@ -263,14 +290,8 @@ class DeconvWorkflow(WorkflowManager):
             st.error('Please select at least one mzML file.')  
             return
         
-        # Make sure output directory exists
+        # Define output directory
         base_path = dirname(self.workflow_dir)
-        if not exists(join(base_path, self.tool_name, 'anno-mzMLs')):
-            makedirs(join(base_path, self.tool_name, 'anno-mzMLs'))
-        if not exists(join(base_path, self.tool_name, 'deconv-mzMLs')):
-            makedirs(join(base_path, self.tool_name, 'deconv-mzMLs'))
-        if not exists(join(base_path, self.tool_name, 'tsv-files')):
-            makedirs(join(base_path, self.tool_name, 'tsv-files'))
 
         # Set number of threads
         if 'threads' in self.executor.parameter_manager.get_parameters_from_json():
@@ -281,9 +302,10 @@ class DeconvWorkflow(WorkflowManager):
         # Process files in sequence
         for in_mzml in in_mzmls:
 
-            # Generate output folder
+            # Generate temporary output folder
             current_base = splitext(basename(in_mzml))[0]
             current_time = time.strftime("%Y%m%d-%H%M%S")
+            dataset_id = '%s_%s'%(current_base, current_time)
             folder_path = join(base_path, 'FLASHDeconvOutput', '%s_%s'%(current_base, current_time))
             if exists(folder_path):
                 rmtree(folder_path)
@@ -291,12 +313,10 @@ class DeconvWorkflow(WorkflowManager):
 
             self.logger.log(f'Processing {current_base}:')
 
-            # Define output paths for viewer
-            out_tsv = join(base_path, self.tool_name, 'tsv-files', f'{current_base}_{current_time}.tsv')
-            out_deconv = join(base_path, self.tool_name, 'deconv-mzMLs', f'{current_base}_{current_time}_deconv.mzML')
-            out_anno = join(base_path, self.tool_name, 'anno-mzMLs', f'{current_base}_{current_time}_annotated.mzML')
-
-            # Additional outputs are directly written to download folder
+            # Define output files
+            out_tsv = join(folder_path, f'out.tsv')
+            out_deconv = join(folder_path, f'out_deconv.mzML')
+            out_anno = join(folder_path, f'anno_annotated.mzML')
             out_spec1 = join(folder_path, f'spec1.tsv')
             out_spec2 = join(folder_path, f'spec2.tsv')
             out_spec3 = join(folder_path, f'spec3.tsv')
@@ -332,14 +352,43 @@ class DeconvWorkflow(WorkflowManager):
                 }
             )
 
-            # Copy generated files to output            
-            copyfile(out_deconv, join(folder_path, f'out_deconv.mzML'))
-            copyfile(out_anno, join(folder_path, f'anno_annotated.mzML'))
-            copyfile(out_tsv, join(folder_path, f'out.tsv'))
-            
-            # Store settings
-            with open(join(folder_path, f'settings_FLASHDeconv.json'), 'w') as f:
-                json.dump(
-                    self.executor.parameter_manager.get_parameters_from_json()['FLASHDeconv'], f,
-                    indent='\t'
+            self.logger.log(f"-> Processing Results...")
+
+            # Store all files
+            for file in listdir(folder_path):
+                self.file_manager.store_file(
+                    dataset_id, str(file).replace('.', '_'), 
+                    Path(folder_path, file), file_name=file
                 )
+            results = self.file_manager.get_results(
+                dataset_id, 
+                ['out_deconv_mzML', 'anno_annotated_mzML', 'out_tsv']
+            )
+            parsedResults = parseDeconv(
+                results['out_deconv_mzML'], results['anno_annotated_mzML'], 
+                results['out_tsv']
+            )
+            for k, v in parsedResults.items():
+                self.file_manager.store_data(dataset_id, k, v)
+            FDsettings = self.executor.parameter_manager.get_parameters_from_json()['FLASHDeconv']
+            self.file_manager.store_data(
+                dataset_id, 'FD_parameters', FDsettings
+            )
+            json_file = Path(folder_path, 'FD_parameters.json')
+            with open(json_file, 'w') as f:
+                json.dump(FDsettings, f)
+            self.file_manager.store_file(
+                dataset_id, 'FD_parameters_json', json_file, 
+                file_name='FD_parameters.json'
+            )
+
+            # Remove temporary folder
+            rmtree(folder_path)
+
+
+class QuantWorkflow(WorkflowManager):
+
+    def __init__(self) -> None:
+        # Initialize the parent class with the workflow name.
+        super().__init__("FLASHQuant", st.session_state["workspace"])
+        self.tool_name = 'FLASHQuantViewer'
