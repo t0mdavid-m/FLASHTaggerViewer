@@ -1,16 +1,72 @@
+import pandas as pd
 import streamlit as st
+
 from pathlib import Path
-import shutil
-from src.common.common import v_space, page_setup, reset_directory, save_params
-from src.parse.quant import initializeWorkspace, handleInputFiles, parseUploadedFiles, getUploadedFileDF, remove_selected_experiment_files, tool, input_file_types, parsed_df_types
+
+from src.Workflow import QuantWorkflow
+from src.parse.quant import parseQuant
+from src.common.common import page_setup
+
 
 # page initialization
 params = page_setup()
 
-# make directory to store files & initialize data storage
-initializeWorkspace(input_file_types, parsed_df_types)
+wf = QuantWorkflow()
 
 st.title("File Upload")
+
+def process_uploaded_files(uploaded_files):
+        
+        # Store all uploaded files
+        for file in uploaded_files:
+            
+            if file.name.endswith("tsv"):
+                if file.name.endswith('.mts.tsv'):
+                    wf.file_manager.store_file(
+                        file.name.split('.mts.tsv')[0], 'trace_tsv', file
+                    )
+                elif file.name.endswith('_shared.tsv'):
+                    wf.file_manager.store_file(
+                        file.name.split('_shared.tsv')[0], 'conflict_tsv', file
+                    )
+                elif file.name.endswith('.tsv'):
+                    wf.file_manager.store_file(
+                        file.name.split('.tsv')[0], 'quant_tsv', file
+                    )
+                else:
+                    st.warning(f'Invalid file : {file.name}')
+            else:
+                st.warning(f'Invalid file : {file.name}')
+        
+        # Get the unparsed files
+        input_files = set(wf.file_manager.get_results_list(['quant_tsv', 'trace_tsv']))
+        parsed_files = set(wf.file_manager.get_results_list(['quant_dfs']))
+        unparsed_files = input_files - parsed_files
+
+        # Get the unpared conflict resolution files
+        tsv_files = set(wf.file_manager.get_results_list(['conflict_tsv']))
+        parsed_tsv_files = set(wf.file_manager.get_results_list(['conflict_resolution_dfs']))
+        unparsed_tsv_files = (tsv_files - parsed_tsv_files) & input_files
+
+        # Process unparsed datasets
+        for unparsed_dataset in (unparsed_files | unparsed_tsv_files):
+            results = wf.file_manager.get_results(
+                unparsed_dataset, ['quant_tsv', 'trace_tsv']
+            )
+
+            conflict_results = None
+            if wf.file_manager.result_exists(unparsed_dataset, 'conflict_tsv'):
+                conflict_results = wf.file_manager.get_results(
+                    unparsed_dataset, ['conflict_tsv']
+                )['conflict_tsv']
+            
+            parsed_data = parseQuant(
+                results['quant_tsv'], results['trace_tsv'], conflict_results
+            )
+
+            for k, v in parsed_data.items():
+                wf.file_manager.store_data(unparsed_dataset, k, v)
+
 
 tabs = st.tabs(["File Upload", "Example Data"])
 
@@ -20,14 +76,17 @@ with tabs[1]:
     _, c2, _ = st.columns(3)
     if c2.button("Load Example Data", type="primary"):
         # loading and copying example files into default workspace
-        for filetype, session_name in zip(['*fq.tsv', '*fq.mts.tsv', '*fq_shared.tsv'],
-                                          input_file_types):
-            for file in Path("example-data/flashquant").glob(filetype):
-                if file.name not in st.session_state[session_name]:
-                    shutil.copy(file, Path(st.session_state["workspace"], tool, session_name, file.name))
-                    st.session_state[session_name].append(file.name)
-        # parsing the example files is done in parseUploadedFiles later
-        st.success("Example mzML files loaded!")
+        for filename_postfix, name_tag in zip(
+            ['*.fq.tsv', '*.fq.mts.tsv', '*.fq_shared.tsv'],
+            ['quant_tsv', 'trace_tsv', 'conflict_tsv']
+        ):
+            for file in Path("example-data/flashquant").glob(filename_postfix):
+                wf.file_manager.store_file(
+                    file.name.replace(filename_postfix[1:], ''), 
+                    name_tag, file, remove=False
+                )
+        process_uploaded_files([])
+        st.success("Example files loaded!")
 
 # Upload files via upload widget
 with tabs[0]:
@@ -50,71 +109,70 @@ with tabs[0]:
     """
     )
     with st.form('files_uploader_form', clear_on_submit=True):
-        uploaded_file = st.file_uploader(
+        uploaded_files = st.file_uploader(
             "FLASHQuant output files", accept_multiple_files=True
         )
         _, c2, _ = st.columns(3)
         # User needs to click button to upload selected files
-        if c2.form_submit_button("Add the tsv files", type="primary"):
-            # Copy uploaded files to *-files directory
-            if uploaded_file:
-                # A list of files is required, since online allows only single upload, create a list
-                if type(uploaded_file) != list:
-                    uploaded_file = [uploaded_file]
+        if c2.form_submit_button("Add files to workspace", type="primary"):
+                if uploaded_files:
+                    # A list of files is required, since online allows only single upload, create a list
+                    if type(uploaded_files) != list:
+                        uploaded_files = [uploaded_files]
 
-                # opening file dialog and closing without choosing a file results in None upload
-                handleInputFiles(uploaded_file)
-                st.success("Successfully added uploaded files!")
-            else:
-                st.warning("Upload some files before adding them.")
+                    # opening file dialog and closing without choosing a file results in None upload
+                    process_uploaded_files(uploaded_files)
+                    st.success("Successfully added uploaded files!")
+                else:
+                    st.warning("Upload some files before adding them.")
 
-# parse files if newly uploaded
-st.session_state['progress_bar_space'] = st.container()
-parseUploadedFiles()
+# File Upload Table
+experiments = (
+    set(wf.file_manager.get_results_list(['quant_tsv']))
+    | set(wf.file_manager.get_results_list(['trace_tsv']))
+    | set(wf.file_manager.get_results_list(['conflict_tsv']))
+)
+table = {
+    'Experiment Name' : [],
+    'Quant Result Files' : [],
+    'Mass Trace Files' : [],
+    '(Conflict resolution Files)' : [],
+}
+for experiment in experiments:
+    table['Experiment Name'].append(experiment)
 
-# for error message or list of uploaded files
-quant_files = sorted(st.session_state["quant_dfs"].keys())
-trace_files = sorted(st.session_state["trace_dfs"].keys())
-res_files = sorted(st.session_state["conflict_resolution_dfs"].keys())
+    if wf.file_manager.result_exists(experiment, 'quant_tsv'):
+        table['Quant Result Files'].append(True)
+    else:
+        table['Quant Result Files'].append(False)
 
-# error message if files not exist
-if len(quant_files) == 0 and len(trace_files) == 0:
-    st.info('No mzML added yet!', icon="ℹ️")
-elif len(quant_files) == 0:
-    st.error("FLASHQuant result file is not added yet!")
-elif len(trace_files) == 0:
-    st.error("FLASHQuant mass trace file is not added yet!")
-elif len(quant_files) != len(trace_files):
-    st.error("The same number of quant result and trace tsv file should be uploaded!")
-else:
-    v_space(2)
-    st.session_state["quant-experiment-df"] = getUploadedFileDF(quant_files, trace_files, res_files)
-    st.markdown('**Uploaded experiments in current workspace**')
-    st.dataframe(st.session_state["quant-experiment-df"])  # show table
-    v_space(1)
+    if wf.file_manager.result_exists(experiment, 'trace_tsv'):
+        table['Mass Trace Files'].append(True)
+    else:
+        table['Mass Trace Files'].append(False)
 
-    # Remove files
-    with st.expander("🗑️ Remove uploaded files"):
-        to_remove = st.multiselect(
-            "select uploaded experiments", options=st.session_state["quant-experiment-df"]['Experiment Name']
-        )
-        c1, c2 = st.columns(2)
-        if c2.button(
-                "Remove **selected**", type="primary", disabled=not any(to_remove)
-        ):
-            params = remove_selected_experiment_files(to_remove, params)
-            st.rerun()
+    if wf.file_manager.result_exists(experiment, 'conflict_tsv'):
+        table['(Conflict resolution Files)'].append(True)
+    else:
+        table['(Conflict resolution Files)'].append(False)
 
-        if c1.button("⚠️ Remove **all**", disabled=not any(st.session_state["quant-experiment-df"])):
-            for file_option, df_option in zip(input_file_types, parsed_df_types):
-                if file_option in st.session_state:
-                    reset_directory(Path(st.session_state.workspace, file_option))
-                    st.session_state[file_option] = []
-                if df_option in st.session_state:
-                    st.session_state[df_option] = {}
+st.markdown('**Uploaded experiments in current workspace**')
+st.dataframe(pd.DataFrame(table))
 
-            st.success("All experiment files removed!")
-            del st.session_state["quant-experiment-df"]  # reset the experiment df table
-            st.rerun()
+# Remove files
+with st.expander("🗑️ Remove mzML files"):
+    to_remove = st.multiselect(
+        "select files", options=experiments
+    )
+    c1, c2 = st.columns(2)
+    if c2.button(
+            "Remove **selected**", type="primary", disabled=not any(to_remove)
+    ):
+        for dataset_id in to_remove:
+            wf.file_manager.remove_results(dataset_id)
+        st.rerun()
 
-save_params(params)
+    if c1.button("⚠️ Remove **all**"):
+        wf.file_manager.clear_cache()
+        st.success("All files removed!")
+        st.rerun()

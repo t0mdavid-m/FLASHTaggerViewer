@@ -1,33 +1,32 @@
 import streamlit as st
 
 from pathlib import Path
-import shutil
+from io import BytesIO
+from zipfile import ZipFile, ZIP_DEFLATED
 
 from src.common.common import page_setup
-from zipfile import ZipFile, ZIP_DEFLATED
+from src.workflow.FileManager import FileManager
+
 
 page_setup()
 
 st.title('Download')
 
-# Define output folder here; all subfolders will be handled as downloadable
-# directories
-output_folder = 'FLASHDeconvOutput'
+file_manager = FileManager(
+    st.session_state["workspace"],
+    Path(st.session_state['workspace'], 'flashdeconv', 'cache')
+)
 
-
-# Generate full path
-dirpath = Path(st.session_state["workspace"], output_folder)
-
-# Detect downloadable content
-if dirpath.exists():
-    directories = sorted(
-        [entry for entry in dirpath.iterdir() if not entry.is_file()]
-    )
-else:
-    directories = []
+targets = [
+    'out_tsv', 'spec1_tsv', 'spec2_tsv', 'spec3_tsv', 'spec4_tsv', 'quant_tsv', 
+    'toppic_ms1_msalign', 'toppic_ms1_feature', 'toppic_ms2_msalign', 
+    'toppic_ms2_feature', 'out_deconv_mzML', 'anno_annotated_mzML', 
+    'FD_parameters_json'
+]
+experiments = file_manager.get_results_list(targets, partial=True)
 
 # Show error if no content is available for download
-if len(directories) == 0:
+if len(experiments) == 0:
     st.error('No results to show yet. Please run a workflow first!')
 else:
     # Table Header
@@ -37,10 +36,10 @@ else:
     columns[2].write('**Delete Result Set**')
 
     # Table Body
-    for i, directory in enumerate(directories):
+    for i, experiment in enumerate(experiments):
         st.divider()
         columns = st.columns(3)
-        columns[0].empty().write(directory.name)
+        columns[0].empty().write(experiment)
         
         with columns[1]:
             button_placeholder = st.empty()
@@ -51,26 +50,32 @@ else:
                 button_placeholder.empty()
                 with st.spinner():
                     # Create ZIP file
-                    out_zip = Path(directory, 'output.zip')
-                    if not out_zip.exists():
-                        with ZipFile(out_zip, 'w', ZIP_DEFLATED) as zip_file:
-                            for output in Path(directory).iterdir():
-                                if output.name == 'output.zip':
-                                    continue
-                                try:
-                                    with open(output, 'r') as f:
-                                        zip_file.writestr(output.name, f.read())
-                                except:
-                                    continue
+                    if not file_manager.result_exists(
+                        experiment, 'download_archive'
+                    ):
+                        zip_buffer = BytesIO()
+                        with ZipFile(zip_buffer, 'w', ZIP_DEFLATED) as f:
+                            for filepath in file_manager.get_results(
+                                experiment, targets, partial=True
+                            ).values():
+                                f.write(filepath)
+                        zip_buffer.seek(0)
+                        file_manager.store_file(
+                            experiment, 'download_archive', zip_buffer, 
+                            file_name=f'{experiment}.zip'
+                        )
+                    out_zip = file_manager.get_results(
+                        experiment, ['download_archive']
+                    )['download_archive']
                     # Show download button after ZIP file was created
                     with open(out_zip, 'rb') as f:
                         button_placeholder.download_button(
                             "Download ⬇️", f, 
-                            file_name = f'{directory.name}.zip',
+                            file_name = f'{experiment}.zip',
                             use_container_width=True
                         )
 
         with columns[2]:
-            if st.button(f"🗑️ {directory.name}", use_container_width=True):
-                shutil.rmtree(directory)
+            if st.button(f"🗑️ {experiment}", use_container_width=True):
+                file_manager.remove_results(experiment)
                 st.rerun()

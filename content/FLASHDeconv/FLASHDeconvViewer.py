@@ -1,13 +1,14 @@
-import streamlit as st
-import sys
 import pandas as pd
+import streamlit as st
+
+from pathlib import Path
 
 from src.common.common import page_setup, save_params
 from src.masstable import getMSSignalDF, getSpectraTableDF
 from src.components import PlotlyHeatmap, PlotlyLineplot, Plotly3Dplot, Tabulator, SequenceView, InternalFragmentMap, \
                            FlashViewerComponent, flash_viewer_grid_component
 from src.sequence import getFragmentDataFromSeq, getInternalFragmentDataFromSeq
-from src.parse.deconv import initializeWorkspace, parseUploadedFiles, getUploadedFileDF
+from src.workflow.FileManager import FileManager
 
 
 DEFAULT_LAYOUT = [['ms1_deconv_heat_map'], ['scan_table', 'mass_table'],
@@ -15,13 +16,11 @@ DEFAULT_LAYOUT = [['ms1_deconv_heat_map'], ['scan_table', 'mass_table'],
 
 
 def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid'):
-    # getting data
-    selected_anno_file = selected_data.iloc[0]['Annotated Files']
-    selected_deconv_file = selected_data.iloc[0]['Deconvolved Files']
 
-    # getting data from mzML files
-    spec_df = st.session_state['deconv_dfs'][selected_deconv_file]
-    anno_df = st.session_state['anno_dfs'][selected_anno_file]
+    # Get data
+    results = file_manager.get_results(selected_data, ['anno_dfs', 'deconv_dfs'])
+    spec_df = results['deconv_dfs']
+    anno_df = results['anno_dfs']
 
     components = []
     data_to_send = {}
@@ -120,43 +119,35 @@ params = page_setup()
 st.title("FLASHViewer")
 setSequenceViewInDefaultView()
 
-# Parse previously uploaded files
-input_file_types = ["deconv-mzMLs", "anno-mzMLs", "tsv-files"]
-parsed_df_types = ["deconv_dfs", "anno_dfs", "parsed_tsv_files"]
-initializeWorkspace(input_file_types, parsed_df_types)
-st.session_state['progress_bar_space'] = st.container()
-parseUploadedFiles()
-
-deconv_files = sorted(st.session_state["deconv_dfs"].keys())
-anno_files = sorted(st.session_state["anno_dfs"].keys())
-st.session_state["experiment-df"] = getUploadedFileDF(deconv_files, anno_files)
+# Get available results
+file_manager = FileManager(
+    st.session_state["workspace"],
+    Path(st.session_state['workspace'], 'flashdeconv', 'cache')
+)
+results = file_manager.get_results_list(['deconv_dfs', 'anno_dfs'])
 
 ### if no input file is given, show blank page
-if len(st.session_state["experiment-df"]) == 0:
+if len(results) == 0:
     st.error('No results to show yet. Please run a workflow first!')
     st.stop()
 
-# input experiment file names (for select-box later)
-experiment_df = st.session_state["experiment-df"]
-
 # Map names to index
-name_to_index = {n : i for i, n in enumerate(experiment_df['Experiment Name'])}
+name_to_index = {n : i for i, n in enumerate(results)}
 
 ### for only single experiment on one view
 st.selectbox(
-    "choose experiment", experiment_df['Experiment Name'], 
+    "choose experiment", results, 
     key="selected_experiment_dropdown", 
     index=name_to_index[st.session_state.selected_experiment0] if 'selected_experiment0' in st.session_state else None,
     on_change=select_experiment
 )
 
 if 'selected_experiment0' in st.session_state:
-    selected_exp0 = experiment_df[experiment_df['Experiment Name'] == st.session_state.selected_experiment0]
     layout_info = DEFAULT_LAYOUT
     if "saved_layout_setting" in st.session_state:  # when layout manager was used
         layout_info = st.session_state["saved_layout_setting"][0]
     with st.spinner('Loading component...'):
-        sendDataToJS(selected_exp0, layout_info)
+        sendDataToJS(st.session_state.selected_experiment0, layout_info)
 
 
 ### for multiple experiments on one view
@@ -168,17 +159,15 @@ if "saved_layout_setting" in st.session_state and len(st.session_state["saved_la
         st.divider()  # horizontal line
 
         st.selectbox(
-            "choose experiment", experiment_df['Experiment Name'], 
+            "choose experiment", results, 
             key=f'selected_experiment_dropdown_{exp_index}',
             index = name_to_index[st.session_state[f'selected_experiment{exp_index}']] if f'selected_experiment{exp_index}' in st.session_state else None,
             on_change=select_experiment
         )
         # if #experiment input files are less than #layouts, all the pre-selection will be the first experiment
         if f"selected_experiment{exp_index}" in st.session_state:
-            selected_exp = experiment_df[
-                experiment_df['Experiment Name'] == st.session_state["selected_experiment%d" % exp_index]]
             layout_info = st.session_state["saved_layout_setting"][exp_index]
             with st.spinner('Loading component...'):
-                sendDataToJS(selected_exp, layout_info, 'flash_viewer_grid_%d' % exp_index)
+                sendDataToJS(st.session_state["selected_experiment%d" % exp_index], layout_info, 'flash_viewer_grid_%d' % exp_index)
 
 save_params(params)

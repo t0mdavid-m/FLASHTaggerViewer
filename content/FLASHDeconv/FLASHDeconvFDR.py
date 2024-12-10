@@ -1,8 +1,12 @@
 import streamlit as st
-import pandas as pd
 import plotly.express as px
 import numpy as np
 import plotly.graph_objects as go
+
+from pathlib import Path
+
+from src.workflow.FileManager import FileManager
+
 
 def ecdf(data):
     """Compute ECDF."""
@@ -13,8 +17,8 @@ def ecdf(data):
 def generate_and_display_plots(df):
     """Generate and display ECDF and density plots."""
     # Extract Qscore data
-    target_qscores = df[df['TargetDecoyType'] == 0]['Qscore']
-    decoy_qscores = df[df['TargetDecoyType'] > 0]['Qscore']
+    target_qscores = df[df['IsDecoy'] == 0]['Qscore']
+    decoy_qscores = df[df['IsDecoy'] > 0]['Qscore']
 
     # Generate ECDF data
     x_target, y_target = ecdf(target_qscores)
@@ -49,15 +53,23 @@ def generate_and_display_plots(df):
 
 st.title('ECDF and Density Plot of QScore Distribution of Targets and Decoys')
 
-if 'parsed_tsv_files' not in st.session_state or not st.session_state['parsed_tsv_files']:
+# Get available results
+file_manager = FileManager(
+    st.session_state["workspace"],
+    Path(st.session_state['workspace'], 'flashdeconv', 'cache')
+)
+experiments = file_manager.get_results_list(['parsed_tsv_files'])
+
+if len(experiments) == 0:
     st.warning("No TSV files uploaded. Please upload TSV files first.")
     st.stop()
 
-tsv_files = list(st.session_state['parsed_tsv_files'].keys())
-tsv_file = st.selectbox("Select TSV file", tsv_files)
+experiment = st.selectbox("Select TSV file", experiments)
 
-if tsv_file:
-    df = st.session_state['parsed_tsv_files'][tsv_file]
+if experiment:
+    df = file_manager.get_results(
+        experiment, ['parsed_tsv_files']
+    )['parsed_tsv_files']
     generate_and_display_plots(df)
 
 
