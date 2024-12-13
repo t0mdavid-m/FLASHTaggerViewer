@@ -214,12 +214,10 @@ class TagWorkflow(WorkflowManager):
                     'tags_tsv', 'protein_tsv'
                 ]
             )
-            print('a')
             parsedResults = parseTnT(
                 results['out_deconv_mzML'], results['anno_annotated_mzML'], 
                 results['tags_tsv'], results['protein_tsv']
             )
-            print('b')
             for k, v in parsedResults.items():
                 self.file_manager.store_data(dataset_id, k, v)
 
