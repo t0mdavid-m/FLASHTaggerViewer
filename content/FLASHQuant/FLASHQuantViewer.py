@@ -38,6 +38,6 @@ selected_exp0 = st.session_state.selected_experiment0_quant
 quant_df = file_manager.get_results(selected_exp0, 'quant_dfs')['quant_dfs']
 
 component = [[FlashViewerComponent(FLASHQuant())]]
-flash_viewer_grid_component(components=component, data={'quant_data': quant_df}, component_key='flash_viewer_grid')
+flash_viewer_grid_component(components=component, data={'quant_data': quant_df, 'dataset': selected_exp0}, component_key='flash_viewer_grid')
 
 save_params(params)

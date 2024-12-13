@@ -23,13 +23,6 @@ def flash_viewer_grid_component(components, data, component_key='flash_viewer_gr
     for row in components:
         out_components.append(list(map(lambda component: {"componentArgs": component.componentArgs.__dict__}, row)))
 
-    data_for_drawing = {}
-    for key, df in data.items():
-        if type(df) is dict:
-            data_for_drawing[key] = json.dumps(df)
-        else:
-            data_for_drawing[key] = df.to_json(orient='records')
-
     component_value = _component_func(
         components=out_components,
         key=component_key,

@@ -237,6 +237,7 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
         'tolerance' : spec_df['tol'].to_numpy(dtype='float')[0],
         'ion_types' : fragments
     }
+    data_to_send['dataset'] = selected_data
 
     flash_viewer_grid_component(components=components, data=data_to_send, component_key=grid_key)
 
