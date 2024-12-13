@@ -64,7 +64,7 @@ RUN (type -p wget >/dev/null || (apt-get update && apt-get install wget -y)) \
 	&& apt-get update \
 	&& apt-get install gh -y
 
-# Download and install mamba.
+# Download and install miniforge.
 ENV PATH="/root/miniforge3/bin:${PATH}"
 RUN wget -q \
     https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh \
