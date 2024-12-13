@@ -14,7 +14,7 @@ env:
   OPENMS_VERSION: 3.2.0 
   PYTHON_VERSION: 3.11.0
   # Name of the installer
-  APP_NAME: OpenMS-StreamlitTemplateApp
+  APP_NAME: FLASHApp-0.50
 
 jobs:
   build-vue-js-component:
