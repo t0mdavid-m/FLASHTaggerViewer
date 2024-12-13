@@ -45,8 +45,8 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
         )['FTnT_parameters_json']
         with open(tnt_settings_file, 'r') as f:
             tnt_settings = json.load(f)
-        if 'tnt:ion_type' in tnt_settings:
-            fragments = tnt_settings['tnt:ion_type'].split('\n')
+        if 'ion_type' in tnt_settings:
+            fragments = tnt_settings['ion_type'].split('\n')
 
     # Process tag df into a linear data format
     new_tag_df = {c : [] for c in tag_df.columns}
