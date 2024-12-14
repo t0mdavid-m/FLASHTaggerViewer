@@ -12,7 +12,7 @@ params = page_setup()
 
 wf = DeconvWorkflow()
 
-st.title(wf.name)
+st.title('FLASHDeconv - Ultrafast Deconvolution')
 
 t = st.tabs(["📁 **File Upload**", "⚙️ **Configure**", "🚀 **Run**", "💡 **Manual Result Upload**"])
 with t[0]:
