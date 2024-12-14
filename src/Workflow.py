@@ -362,9 +362,19 @@ class DeconvWorkflow(WorkflowManager):
                 dataset_id, 
                 ['out_deconv_mzML', 'anno_annotated_mzML', 'out_tsv']
             )
+            out_tsv_ms1 = None
+            if self.file_manager.result_exists(dataset_id, 'spec1_tsv'):
+                out_tsv_ms1 = self.file_manager.get_results(
+                    dataset_id, ['spec1_tsv']
+                )['spec1_tsv']
+            out_tsv_ms2 = None
+            if self.file_manager.result_exists(dataset_id, 'spec2_tsv'):
+                out_tsv_ms2 = self.file_manager.get_results(
+                    dataset_id, ['spec2_tsv']
+                )['spec2_tsv']
             parsedResults = parseDeconv(
                 results['out_deconv_mzML'], results['anno_annotated_mzML'], 
-                results['out_tsv']
+                out_tsv_ms1, out_tsv_ms2
             )
             for k, v in parsedResults.items():
                 self.file_manager.store_data(dataset_id, k, v)
