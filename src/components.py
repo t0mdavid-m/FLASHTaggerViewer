@@ -72,7 +72,7 @@ class PlotlyLineplot:
 
 class FDRPlotly:
     def __init__(self):
-        self.title = 'QScore FDR Plot'
+        self.title = 'QScore ECDF Plot'
         self.componentName = "FDRPlotly"
 
 class PlotlyLineplotTagger:
