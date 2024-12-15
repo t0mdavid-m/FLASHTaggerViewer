@@ -132,7 +132,7 @@ class TagWorkflow(WorkflowManager):
 
             # Check if a decoy database needs to be generated
             tagger_params = self.executor.parameter_manager.get_parameters_from_json()['FLASHTnT']
-            if ((tagger_params.get('tnt:prsm_fdr', 1) < 1) or (tagger_params.get('tnt:pro_fdr', 1) < 1)):
+            if ((tagger_params.get('prsm_fdr', 1) < 1) or (tagger_params.get('pro_fdr', 1) < 1)):
                 # If few proteins are present increase decoy size
                 if self.executor.parameter_manager.get_parameters_from_json()['few_proteins']:
                     ratio = 10
