@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import streamlit as st
 
@@ -6,7 +7,7 @@ from pathlib import Path
 from src.common.common import page_setup, save_params
 from src.masstable import getMSSignalDF, getSpectraTableDF
 from src.components import PlotlyHeatmap, PlotlyLineplot, Plotly3Dplot, Tabulator, SequenceView, InternalFragmentMap, \
-                           FlashViewerComponent, flash_viewer_grid_component
+                           FlashViewerComponent, flash_viewer_grid_component, FDRPlotly
 from src.sequence import getFragmentDataFromSeq, getInternalFragmentDataFromSeq
 from src.workflow.FileManager import FileManager
 
@@ -18,9 +19,23 @@ DEFAULT_LAYOUT = [['ms1_deconv_heat_map'], ['scan_table', 'mass_table'],
 def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid'):
 
     # Get data
-    results = file_manager.get_results(selected_data, ['anno_dfs', 'deconv_dfs'])
+    results = file_manager.get_results(
+        selected_data, 
+        ['anno_dfs', 'deconv_dfs', 'parsed_tsv_file_ms1', 'parsed_tsv_file_ms2'],
+        partial=True
+    )
     spec_df = results['deconv_dfs']
     anno_df = results['anno_dfs']
+
+    fdr_dfs = []
+    if 'parsed_tsv_file_ms1' in results:
+        fdr_dfs.append(results['parsed_tsv_file_ms1'])
+    if 'parsed_tsv_file_ms2' in results:
+        fdr_dfs.append(results['parsed_tsv_file_ms2'])
+    if len(fdr_dfs) > 0:
+        fdr_dfs = pd.concat(fdr_dfs, axis=0, ignore_index=True)
+    else:
+        fdr_dfs = None
 
     components = []
     data_to_send = {}
@@ -58,6 +73,12 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
             elif comp_name == 'internal_fragment_map':
                 data_to_send['internal_fragment_data'] = getInternalFragmentDataFromSeq(st.session_state.input_sequence)
                 component_arguments = InternalFragmentMap()
+            elif comp_name == 'fdr_plot':
+                if fdr_dfs is not None:
+                    ecdf_target, ecdf_decoy = ecdf(fdr_dfs)
+                    data_to_send['ecdf_target'] = ecdf_target
+                    data_to_send['ecdf_decoy'] = ecdf_decoy
+                component_arguments = FDRPlotly()
 
             components_of_this_row.append(FlashViewerComponent(component_arguments))
         components.append(components_of_this_row)
@@ -97,6 +118,19 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
 
     flash_viewer_grid_component(components=components, data=data_to_send, component_key=grid_key)
 
+def ecdf(df):
+    target_qscores = df[df['TargetDecoyType'] == 0]['Qscore']
+    decoy_qscores = df[df['TargetDecoyType'] > 0]['Qscore']
+
+    ecdf_target = pd.DataFrame({
+        'x' : np.sort(target_qscores),
+        'y' : np.arange(1, len(target_qscores) + 1) / len(target_qscores)
+    })
+    ecdf_decoy = pd.DataFrame({
+        'x' : np.sort(decoy_qscores),
+        'y' : np.arange(1, len(decoy_qscores) + 1) / len(decoy_qscores)
+    })
+    return ecdf_target, ecdf_decoy
 
 def setSequenceViewInDefaultView():
     if 'input_sequence' in st.session_state and st.session_state.input_sequence:
