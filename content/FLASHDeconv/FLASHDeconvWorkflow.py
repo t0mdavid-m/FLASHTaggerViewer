@@ -12,7 +12,7 @@ params = page_setup()
 
 wf = DeconvWorkflow()
 
-st.title(wf.name)
+st.title('FLASHDeconv - Ultrafast Deconvolution')
 
 t = st.tabs(["📁 **File Upload**", "⚙️ **Configure**", "🚀 **Run**", "💡 **Manual Result Upload**"])
 with t[0]:
@@ -41,9 +41,16 @@ with t[3]:
                 else:
                     st.warning(f'Invalid file : {file.name}')
             elif file.name.endswith("tsv"):
-                wf.file_manager.store_file(
-                    file.name.split('.tsv')[0], 'out_tsv', file
-                )
+                if file.name.endswith('_spec1.tsv'):
+                    wf.file_manager.store_file(
+                        file.name.split('_spec1.tsv')[0], 'spec1_tsv', file
+                    )
+                elif file.name.endswith('_spec2.tsv'):
+                    wf.file_manager.store_file(
+                        file.name.split('_spec2.tsv')[0], 'spec2_tsv', file
+                    )
+                else:
+                    st.warning(f'Invalid file : {file.name}')
             else:
                 st.warning(f'Invalid file : {file.name}')
         
@@ -53,25 +60,27 @@ with t[3]:
         unparsed_files = input_files - parsed_files
 
         # Get the unpared tsv files
-        tsv_files = set(wf.file_manager.get_results_list(['out_tsv']))
-        parsed_tsv_files = set(wf.file_manager.get_results_list(['parsed_tsv_files']))
-        unparsed_tsv_files = (tsv_files - parsed_tsv_files) & input_files
+        ms1_tsv_files = set(wf.file_manager.get_results_list(['spec1_tsv']))
+        parsed_ms1_tsv_files = set(wf.file_manager.get_results_list(['parsed_tsv_file_ms1']))
+        ms2_tsv_files = set(wf.file_manager.get_results_list(['spec2_tsv']))
+        parsed_ms2_tsv_files = set(wf.file_manager.get_results_list(['parsed_tsv_file_ms2']))
+        unparsed_tsv_files = (
+            (
+                (ms1_tsv_files - parsed_ms1_tsv_files) 
+                | (ms2_tsv_files - parsed_ms2_tsv_files)
+            ) & input_files
+        )
 
         # Process unparsed datasets
         for unparsed_dataset in (unparsed_files | unparsed_tsv_files):
             results = wf.file_manager.get_results(
-                unparsed_dataset, ['out_deconv_mzML', 'anno_annotated_mzML']
+                unparsed_dataset, 
+                ['out_deconv_mzML', 'anno_annotated_mzML', 
+                 'spec1_tsv', 'spec2_tsv'],
+                 partial=True
             )
 
-            tsv_results = None
-            if wf.file_manager.result_exists(unparsed_dataset, 'out'):
-                tsv_results = wf.file_manager.get_results(
-                    unparsed_dataset, ['out']
-                )['out']
-            
-            parsed_data = parseDeconv(
-                results['out_deconv_mzML'], results['anno_annotated_mzML'], tsv_results
-            )
+            parsed_data = parseDeconv(**results)
 
             for k, v in parsed_data.items():
                 wf.file_manager.store_data(unparsed_dataset, k, v)
@@ -86,8 +95,8 @@ with t[3]:
         if c2.button("Load Example Data", type="primary"):
             # loading and copying example files into default workspace
             for filename_postfix, name_tag in zip(
-                ['*_deconv.mzML', '*_annotated.mzML', '*.tsv'],
-                ["out_deconv_mzML", "anno_annotated_mzML", "out_tsv"]
+                ['*_deconv.mzML', '*_annotated.mzML', '*_spec1.tsv'],
+                ["out_deconv_mzML", "anno_annotated_mzML", "spec1_tsv"]
             ):
                 for file in Path("example-data", "flashdeconv").glob(filename_postfix):
                     wf.file_manager.store_file(
@@ -98,7 +107,7 @@ with t[3]:
             st.success("Example files loaded!")
 
     with tabs[0]:
-        st.subheader("**Upload FLASHDeconv output files (\*_annotated.mzML & \*_deconv.mzML) or TSV files (ECDF Plot only)**")
+        st.subheader("**Upload FLASHDeconv output files (\*_annotated.mzML & \*_deconv.mzML) or spec1/2 TSV files (ECDF Plot only)**")
         st.info(
             """
             **💡 How to upload files**
@@ -130,7 +139,8 @@ with t[3]:
 
     # File Upload Table
     experiments = (
-        set(wf.file_manager.get_results_list(['out_tsv']))
+        set(wf.file_manager.get_results_list(['spec1_tsv']))
+        | set(wf.file_manager.get_results_list(['spec2_tsv']))
         | set(wf.file_manager.get_results_list(['out_deconv_mzML']))
         | set(wf.file_manager.get_results_list(['anno_annotated_mzML']))
     )
@@ -138,7 +148,8 @@ with t[3]:
         'Experiment Name' : [],
         'Deconvolved Files' : [],
         'Annotated Files' : [],
-        '(TSV Files)' : [],
+        '(MS1 TSV Files)' : [],
+        '(MS2 TSV Files)' : [],
     }
     for experiment in experiments:
         table['Experiment Name'].append(experiment)
@@ -153,10 +164,14 @@ with t[3]:
         else:
             table['Annotated Files'].append(False)
 
-        if wf.file_manager.result_exists(experiment, 'out_tsv'):
-            table['(TSV Files)'].append(True)
+        if wf.file_manager.result_exists(experiment, 'spec1_tsv'):
+            table['(MS1 TSV Files)'].append(True)
         else:
-            table['(TSV Files)'].append(False)
+            table['(MS1 TSV Files)'].append(False)
+        if wf.file_manager.result_exists(experiment, 'spec2_tsv'):
+            table['(MS2 TSV Files)'].append(True)
+        else:
+            table['(MS2 TSV Files)'].append(False)
 
     st.markdown('**Uploaded experiments in current workspace**')
     st.dataframe(pd.DataFrame(table))

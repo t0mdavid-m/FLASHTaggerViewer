@@ -45,8 +45,8 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
         )['FTnT_parameters_json']
         with open(tnt_settings_file, 'r') as f:
             tnt_settings = json.load(f)
-        if 'tnt:ion_type' in tnt_settings:
-            fragments = tnt_settings['tnt:ion_type'].split('\n')
+        if 'ion_type' in tnt_settings:
+            fragments = tnt_settings['ion_type'].split('\n')
 
     # Process tag df into a linear data format
     new_tag_df = {c : [] for c in tag_df.columns}
@@ -192,6 +192,7 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
                 per_scan_contents['3d'] = True
                 component_arguments = Plotly3Dplot(title="Precursor Signals")
             elif comp_name == 'sequence_view':
+                per_scan_contents['deconv_spec'] = True
             #    data_to_send['sequence_data'] = getFragmentDataFromSeq(st.session_state.input_sequence)
                 component_arguments = SequenceView()
             elif comp_name == 'internal_fragment_map':
@@ -237,6 +238,7 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
         'tolerance' : spec_df['tol'].to_numpy(dtype='float')[0],
         'ion_types' : fragments
     }
+    data_to_send['dataset'] = selected_data
 
     flash_viewer_grid_component(components=components, data=data_to_send, component_key=grid_key)
 

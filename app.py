@@ -14,7 +14,6 @@ if __name__ == '__main__':
             st.Page(Path("content", "FLASHDeconv", "FLASHDeconvLayoutManager.py"), title="Layout Manager", icon="📝️"),
             st.Page(Path("content", "FLASHDeconv", "FLASHDeconvViewer.py"), title="Viewer", icon="👀"),
             st.Page(Path("content", "FLASHDeconv", "FLASHDeconvDownload.py"), title="Download", icon="⬇️"),
-            st.Page(Path("content", "FLASHDeconv", "FLASHDeconvFDR.py"), title="ECDF Plot", icon="📈"),
         ],
         "🧨 FLASHTnT": [
             st.Page(Path("content", "FLASHTnT", "FLASHTnTWorkflow.py"), title="Workflow", icon="⚙️"),

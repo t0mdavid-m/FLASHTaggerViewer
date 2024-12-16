@@ -132,7 +132,7 @@ class TagWorkflow(WorkflowManager):
 
             # Check if a decoy database needs to be generated
             tagger_params = self.executor.parameter_manager.get_parameters_from_json()['FLASHTnT']
-            if ((tagger_params.get('tnt:prsm_fdr', 1) < 1) or (tagger_params.get('tnt:pro_fdr', 1) < 1)):
+            if ((tagger_params.get('prsm_fdr', 1) < 1) or (tagger_params.get('pro_fdr', 1) < 1)):
                 # If few proteins are present increase decoy size
                 if self.executor.parameter_manager.get_parameters_from_json()['few_proteins']:
                     ratio = 10
@@ -214,12 +214,10 @@ class TagWorkflow(WorkflowManager):
                     'tags_tsv', 'protein_tsv'
                 ]
             )
-            print('a')
             parsedResults = parseTnT(
                 results['out_deconv_mzML'], results['anno_annotated_mzML'], 
                 results['tags_tsv'], results['protein_tsv']
             )
-            print('b')
             for k, v in parsedResults.items():
                 self.file_manager.store_data(dataset_id, k, v)
 
@@ -364,9 +362,19 @@ class DeconvWorkflow(WorkflowManager):
                 dataset_id, 
                 ['out_deconv_mzML', 'anno_annotated_mzML', 'out_tsv']
             )
+            out_tsv_ms1 = None
+            if self.file_manager.result_exists(dataset_id, 'spec1_tsv'):
+                out_tsv_ms1 = self.file_manager.get_results(
+                    dataset_id, ['spec1_tsv']
+                )['spec1_tsv']
+            out_tsv_ms2 = None
+            if self.file_manager.result_exists(dataset_id, 'spec2_tsv'):
+                out_tsv_ms2 = self.file_manager.get_results(
+                    dataset_id, ['spec2_tsv']
+                )['spec2_tsv']
             parsedResults = parseDeconv(
                 results['out_deconv_mzML'], results['anno_annotated_mzML'], 
-                results['out_tsv']
+                out_tsv_ms1, out_tsv_ms2
             )
             for k, v in parsedResults.items():
                 self.file_manager.store_data(dataset_id, k, v)

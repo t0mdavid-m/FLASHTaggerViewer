@@ -12,7 +12,7 @@ params = page_setup()
 
 wf = TagWorkflow()
 
-st.title(wf.name)
+st.title('FLASHTnT - Tag and Extend')
 
 t = st.tabs(["📁 **File Upload**", "⚙️ **Configure**", "🚀 **Run**", "💡 **Manual Result Upload**"])
 with t[0]:
