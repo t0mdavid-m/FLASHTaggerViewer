@@ -142,6 +142,8 @@ def select_experiment():
     st.session_state.selected_experiment0 = st.session_state.selected_experiment_dropdown
     if "saved_layout_setting" in st.session_state and len(st.session_state["saved_layout_setting"]) > 1:
         for exp_index in range(1, len(st.session_state["saved_layout_setting"])):
+            if st.session_state[f'selected_experiment_dropdown_{exp_index}'] is None:
+                continue
             st.session_state[f"selected_experiment{exp_index}"] = st.session_state[f'selected_experiment_dropdown_{exp_index}']
 
 

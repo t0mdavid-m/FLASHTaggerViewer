@@ -252,6 +252,8 @@ def select_experiment():
     st.session_state.selected_experiment0_tagger = st.session_state.selected_experiment_dropdown_tagger
     if "saved_layout_setting_tagger" in st.session_state and len(st.session_state["saved_layout_setting_tagger"]) > 1:
         for exp_index in range(1, len(st.session_state["saved_layout_setting_tagger"])):
+            if st.session_state[f'selected_experiment_dropdown_{exp_index}_tagger'] is None:
+                continue
             st.session_state[f"selected_experiment{exp_index}_tagger"] = st.session_state[f'selected_experiment_dropdown_{exp_index}_tagger']
 
 
@@ -312,6 +314,6 @@ if "saved_layout_setting_tagger" in st.session_state and len(st.session_state["s
         if f"selected_experiment{exp_index}_tagger" in st.session_state:
             layout_info = st.session_state["saved_layout_setting_tagger"][exp_index]
             with st.spinner('Loading component...'):
-                sendDataToJS(st.session_state["selected_experiment%d" % exp_index], layout_info, 'flash_viewer_grid_%d' % exp_index)
+                sendDataToJS(st.session_state["selected_experiment%d_tagger" % exp_index], layout_info, 'flash_viewer_grid_%d' % exp_index)
 
 save_params(params)
