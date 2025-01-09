@@ -12,7 +12,7 @@ from src.common.common import page_setup, save_params
 from src.masstable import getMSSignalDF, getSpectraTableDF
 from src.components import PlotlyHeatmap, Plotly3Dplot, Tabulator, SequenceView, InternalFragmentMap, \
                            FlashViewerComponent, flash_viewer_grid_component, PlotlyLineplotTagger
-from src.sequence import getFragmentDataFromSeq
+from src.sequence import getFragmentDataFromSeq, getInternalFragmentDataFromSeq
 from src.workflow.FileManager import FileManager
 from src.sequence import remove_ambigious
 
@@ -94,6 +94,7 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
     )
 
     sequence_data = {}
+    internal_fragment_data = {}
     # Compute coverage
     for i, row in protein_df.iterrows():
         pid = row['index']
@@ -152,6 +153,10 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
                 'labels' : l
             } for s, e, m, l in zip(mod_starts, mod_ends, mod_masses, mod_labels)
         ]
+
+        internal_fragment_data[pid] = getInternalFragmentDataFromSeq(
+            str(sequence)[start_index:end_index+1], modifications
+        )
 
     components = []
     data_to_send = {}
@@ -234,6 +239,7 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
 
     # Set sequence data
     data_to_send['sequence_data'] = sequence_data
+    data_to_send['internal_fragment_data'] = internal_fragment_data
     data_to_send['settings'] = {
         'tolerance' : spec_df['tol'].to_numpy(dtype='float')[0],
         'ion_types' : fragments

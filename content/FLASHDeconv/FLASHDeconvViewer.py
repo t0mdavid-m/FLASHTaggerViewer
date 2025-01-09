@@ -71,7 +71,7 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
                 data_to_send['sequence_data'] = {0: getFragmentDataFromSeq(st.session_state.input_sequence)}
                 component_arguments = SequenceView()
             elif comp_name == 'internal_fragment_map':
-                data_to_send['internal_fragment_data'] = getInternalFragmentDataFromSeq(st.session_state.input_sequence)
+                data_to_send['internal_fragment_data'] = {0: getInternalFragmentDataFromSeq(st.session_state.input_sequence)}
                 component_arguments = InternalFragmentMap()
             elif comp_name == 'fdr_plot':
                 if fdr_dfs is not None:

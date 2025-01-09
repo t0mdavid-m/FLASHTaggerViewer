@@ -115,14 +115,19 @@ def getFragmentDataFromSeq(sequence, coverage=None, maxCoverage=None, modificati
                 unmodified_mass = pr[0]
                 modified_mass = unmodified_mass
                 for s, e, m in modifications:
+                    # Area of ambiguous modifications
                     if (s <= i+1) and (e >= i+1):
                         modified_mass += m
+                    # Mass shift prior to this ion
                     elif (s <= i+1):
                         unmodified_mass += m
                         modified_mass += m
+                # Consider mass shift before ion
                 pr[0] = unmodified_mass
+                # If in area of ambiguous modifications, both masses are used
                 if modifications != unmodified_mass:
                     pr.append(modified_mass)
+            # Same as for prefix but reversed
             for i, su in enumerate(reversed(suffix_ions)):
                 unmodified_mass = su[0]
                 modified_mass = unmodified_mass
@@ -194,7 +199,7 @@ def isMatchWithTolerance(A, t, s):
     return False
 
 
-def getInternalFragmentMassesWithSeq(sequence, res_type):
+def getInternalFragmentMassesWithSeq(sequence, res_type, modifications=None):
     shift = -H20 if res_type == 'by' or res_type == 'cz' else (-H20-NH3 if res_type == 'bz' else -H20+NH3)
     masses = []
     start_indices = []
@@ -208,37 +213,59 @@ def getInternalFragmentMassesWithSeq(sequence, res_type):
     termianl_masses = byp + bys + czp + czs#tmp code
     termianl_masses.sort()#tmp code
 
+    # Iterate over N-Terminal bound
     for i, s in enumerate(sequence):
+        # First position cannot have internal fragments
         if i == 0:
             continue
+        # Last position cannot have internal fragments
         if i == len(sequence)-1:
             break
         mass = 0.0
+        # Iterate over C-Terminal bound
         for j, t in enumerate(sequence):
+            # Valid internal fragments have C-Terminal bound > N-Terminal
             if j >= i:
                 mass = mass + aa_masses[sequence[j]]
+            # Only conside fragments of at least length 5
             if j < i+5-1:
                 continue
 
-            if isMatchWithTolerance(termianl_masses, mass, 10.0): #tmp code
-                continue #tmp code
+            possible_masses = [mass]
 
-            masses.append(mass + 18.010564683 + shift)
-            start_indices.append(i)
-            end_indices.append(j+1)
+            if modifications is not None:
+                for s, e, m in modifications:
+                    # Modification is fully contained
+                    if (s >= i+1) and (e <= j+1):
+                        possible_masses[0] += m
+                    # Modification is partially contained
+                    elif (s >= i+1) or (e <= j+1):
+                        possible_masses.append(mass + m)
+            
+            for mass in possible_masses:
+                # TODO: Should be adressed in component
+                if isMatchWithTolerance(termianl_masses, mass, 10.0): #tmp code
+                    continue #tmp code
+                
+
+                masses.append(mass + 18.010564683 + shift)
+                start_indices.append(i)
+                end_indices.append(j+1)
 
     return masses, start_indices, end_indices
 
 
 #@st.cache_data
-def getInternalFragmentDataFromSeq(sequence):
+def getInternalFragmentDataFromSeq(sequence, modifications= None):
     # TODO: fixed modification
     # protein = AASequence.fromString(sequence)
     # protein, fixed_mods = setFixedModification(protein)  # handling fixed modifications
 
     out_object = {}  # sequence information is from "sequence_data"
     for ion_type in ['by', 'bz', 'cy']:  # by cz are the same.
-        ions, start_indices, end_indices = getInternalFragmentMassesWithSeq(sequence, ion_type)
+        ions, start_indices, end_indices = getInternalFragmentMassesWithSeq(
+            sequence, ion_type, modifications
+        )
         out_object['fragment_masses_%s' % ion_type] = ions
         out_object['start_indices_%s' % ion_type] = start_indices
         out_object['end_indices_%s' % ion_type] = end_indices
