@@ -5,6 +5,7 @@ import json
 COMPONENT_OPTIONS=[
     'Protein table',
     'Sequence view (Protein table needed)',
+    'Internal fragment map (Protein table needed)',
     'Tag table (Protein table needed)',
     'Spectrum view (Tag table needed)',
 ]
@@ -12,6 +13,7 @@ COMPONENT_OPTIONS=[
 COMPONENT_NAMES=[
     'protein_table', 
     'sequence_view', 
+    'internal_fragment_map',
     'tag_table',
     'deconv_spectrum'
 ]
