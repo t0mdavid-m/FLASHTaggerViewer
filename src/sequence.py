@@ -251,7 +251,7 @@ def getInternalFragmentMassesWithSeq(sequence, res_type, modifications=None):
                 masses.append(mass + 18.010564683 + shift)
                 start_indices.append(i)
                 end_indices.append(j+1)
-
+    print(len(masses))
     return masses, start_indices, end_indices
 
 
