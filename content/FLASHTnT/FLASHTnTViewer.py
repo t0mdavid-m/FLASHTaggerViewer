@@ -9,9 +9,9 @@ from pathlib import Path
 from pyopenms import AASequence
 
 from src.common.common import page_setup, save_params
-from src.masstable import getMSSignalDF, getSpectraTableDF
-from src.components import PlotlyHeatmap, Plotly3Dplot, Tabulator, SequenceView, InternalFragmentMap, \
-                           FlashViewerComponent, flash_viewer_grid_component, PlotlyLineplotTagger
+from src.masstable import getSpectraTableDF
+from src.components import Tabulator, SequenceView, InternalFragmentMap, \
+    FlashViewerComponent, flash_viewer_grid_component, PlotlyLineplotTagger
 from src.sequence import getFragmentDataFromSeq, getInternalFragmentDataFromSeq
 from src.workflow.FileManager import FileManager
 from src.sequence import remove_ambigious
@@ -160,32 +160,16 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
 
     components = []
     data_to_send = {}
-    per_scan_contents = {'mass_table': False, 'anno_spec': False, 'deconv_spec': False, '3d': False}
+    per_scan_contents = {'spectrum_view': False, 'sequence_view': False}
     for row in layout_info_per_exp:
         components_of_this_row = []
-        for col_index, comp_name in enumerate(row):
+        for _, comp_name in enumerate(row):
             component_arguments = None
 
             # prepare component arguments
-            if comp_name == 'ms1_raw_heatmap':
-                data_to_send['raw_heatmap_df'] = getMSSignalDF(anno_df)
-                component_arguments = PlotlyHeatmap(title="Raw MS1 Heatmap")
-            elif comp_name == 'ms1_deconv_heat_map':
-                data_to_send['deconv_heatmap_df'] = getMSSignalDF(spec_df)
-                component_arguments = PlotlyHeatmap(title="Deconvolved MS1 Heatmap")
-            elif comp_name == 'scan_table':
-                data_to_send['per_scan_data'] = getSpectraTableDF(spec_df)
-                component_arguments = Tabulator('ScanTable')
-            elif comp_name == 'deconv_spectrum':
-                per_scan_contents['deconv_spec'] = True
-                per_scan_contents['anno_spec'] = True
+            if comp_name == 'deconv_spectrum':
+                per_scan_contents['spectrum_view'] = True
                 component_arguments = PlotlyLineplotTagger(title="Deconvolved Spectrum")
-            elif comp_name == 'anno_spectrum':
-                per_scan_contents['anno_spec'] = True
-                component_arguments = PlotlyLineplotTagger(title="Annotated Spectrum")
-            elif comp_name == 'mass_table':
-                per_scan_contents['mass_table'] = True
-                component_arguments = Tabulator('MassTable')
             elif comp_name == 'protein_table':
                 data_to_send['protein_table'] = protein_df
                 data_to_send['per_scan_data'] = getSpectraTableDF(spec_df)
@@ -193,59 +177,51 @@ def sendDataToJS(selected_data, layout_info_per_exp, grid_key='flash_viewer_grid
             elif comp_name == 'tag_table':
                 data_to_send['tag_table'] = tag_df
                 component_arguments = Tabulator('TagTable')
-            elif comp_name == '3D_SN_plot':
-                per_scan_contents['3d'] = True
-                component_arguments = Plotly3Dplot(title="Precursor Signals")
             elif comp_name == 'sequence_view':
-                per_scan_contents['deconv_spec'] = True
-            #    data_to_send['sequence_data'] = getFragmentDataFromSeq(st.session_state.input_sequence)
+                per_scan_contents['sequence_view'] = True
                 component_arguments = SequenceView()
             elif comp_name == 'internal_fragment_map':
-            #    data_to_send['internal_fragment_data'] = getInternalFragmentDataFromSeq(st.session_state.input_sequence)
+                data_to_send['internal_fragment_data'] = internal_fragment_data
                 component_arguments = InternalFragmentMap()
 
             components_of_this_row.append(FlashViewerComponent(component_arguments))
         components.append(components_of_this_row)
-    per_scan_contents['3d'] = True
+
     if any(per_scan_contents.values()):
         scan_table = data_to_send['per_scan_data']
         dfs = [scan_table]
         for key, exist in per_scan_contents.items():
             if not exist: continue
 
-            if key == 'mass_table':
-                tmp_df = spec_df[['mzarray', 'intarray', 'MinCharges', 'MaxCharges', 'MinIsotopes', 'MaxIsotopes',
-                                  'cos', 'snr', 'qscore']].copy()
-                tmp_df.rename(columns={'mzarray': 'MonoMass', 'intarray': 'SumIntensity', 'cos': 'CosineScore',
-                                       'snr': 'SNR', 'qscore': 'QScore'},
-                              inplace=True)
-            elif key == 'deconv_spec':
-                if per_scan_contents['mass_table']: continue  # deconv_spec shares same data with mass_table
-
-                tmp_df = spec_df[['mzarray', 'intarray', 'CombinedPeaks']].copy()
+            if key == 'spectrum_view':
+                tmp_df = spec_df[['mzarray', 'intarray', 'CombinedPeaks', 'SignalPeaks', 'NoisyPeaks']].copy()
                 tmp_df.rename(columns={'mzarray': 'MonoMass', 'intarray': 'SumIntensity'}, inplace=True)
-            elif key == 'anno_spec':
+                dfs.append(tmp_df)
+
                 tmp_df = anno_df[['mzarray', 'intarray']].copy()
                 tmp_df.rename(columns={'mzarray': 'MonoMass_Anno', 'intarray': 'SumIntensity_Anno'}, inplace=True)
-            elif key == '3d':
-                tmp_df = spec_df[['PrecursorScan', 'SignalPeaks', 'NoisyPeaks']].copy()
-            else:  # shouldn't come here
-                continue
+                dfs.append(tmp_df)                               
+                
+            elif key == 'sequence_view':
+                # Deconvolved data
+                tmp_df = spec_df[['mzarray']].copy()
+                tmp_df.rename(columns={'mzarray': 'MonoMass'}, inplace=True)
+                dfs.append(tmp_df)
 
-            dfs.append(tmp_df)
         combined_dfs = pd.concat(dfs, axis=1)
         combined_dfs = combined_dfs[np.isin(combined_dfs['Scan'], protein_df['Scan'])]
+        combined_dfs = combined_dfs.loc[:, ~combined_dfs.columns.duplicated()]
         data_to_send['per_scan_data'] = combined_dfs
 
     # Set sequence data
     data_to_send['sequence_data'] = sequence_data
-    data_to_send['internal_fragment_data'] = internal_fragment_data
     data_to_send['settings'] = {
         'tolerance' : spec_df['tol'].to_numpy(dtype='float')[0],
         'ion_types' : fragments
     }
     data_to_send['dataset'] = selected_data
-
+    
+    # data_to_send['internal_fragment_data'] = pd.DataFrame(internal_fragment_data)
     flash_viewer_grid_component(components=components, data=data_to_send, component_key=grid_key)
 
 
