@@ -125,7 +125,7 @@ def getFragmentDataFromSeq(sequence, coverage=None, maxCoverage=None, modificati
                 # Consider mass shift before ion
                 pr[0] = unmodified_mass
                 # If in area of ambiguous modifications, both masses are used
-                if modifications != unmodified_mass:
+                if abs(modified_mass - unmodified_mass) > 1e-3:
                     pr.append(modified_mass)
             # Same as for prefix but reversed
             for i, su in enumerate(reversed(suffix_ions)):
