@@ -119,6 +119,7 @@ class StreamlitUI:
                                 with open(Path(files_dir, f.name), "wb") as fh:
                                     fh.write(f.getbuffer())
                         st.success("Successfully added uploaded files!")
+                        st.rerun()
                     else:
                         st.error("Nothing to add, please upload file.")
         else:
@@ -161,6 +162,7 @@ class StreamlitUI:
                         st.success("Successfully added files!")
 
                         st.session_state["previous_dir"] = Path(local_files[0]).parent
+                        st.rerun()
 
         # Local file upload option: via directory path
         if st.session_state.location == "local":
@@ -232,6 +234,7 @@ class StreamlitUI:
                                     f_handle.write(f"{f}\n")
                         my_bar.empty()
                         st.success("Successfully copied files!")
+                        st.rerun()
 
             if not TK_AVAILABLE:
                 c2.warning(
