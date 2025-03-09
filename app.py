@@ -6,7 +6,10 @@ import pyopenms
 if __name__ == '__main__':
     pages = {
         "FLASHApp" : [
-            st.Page(Path("content", "quickstart.py"), title="Quickstart", icon="👋")
+            st.Page(Path("content", "quickstart.py"), title="Quickstart", icon="👋"),
+            #st.Page(Path("content", "USER_GUIDE.md").read_text(encoding="utf-8"), unsafe_allow_html=True),
+            st.Page(Path("content", "USER_GUIDE.py"), title="User Guide", icon="📖"),
+
         ],
         "⚡️ FLASHDeconv" : [
             st.Page(Path("content", "FLASHDeconv", "FLASHDeconvWorkflow.py"), title="Workflow", icon="⚙️"),

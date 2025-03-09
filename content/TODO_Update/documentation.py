@@ -27,10 +27,13 @@ page = cols[0].selectbox(
 # User Guide
 #############################################################################################
 
-if page == pages[0]:
-    with open(Path("docs", "user_guide.md"), "r", encoding="utf-8") as f:
-        content = f.read()
-    st.markdown(content) 
+if page == "User Guide":
+    file_path = Path("content", "USER_GUIDE.md")
+
+    if file_path.exists():
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read().encode("utf-8", "ignore").decode("utf-8")
+        st.markdown(content, unsafe_allow_html=True)
 
 #############################################################################################
 # Installation
